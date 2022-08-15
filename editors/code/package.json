@@ -1,0 +1,44 @@
+{
+    "name": "octave-lsp",
+    "displayName": "octave-lsp",
+    "description": "Octave language support for VS Code.",
+    "version": "0.1.0",
+    "publisher": "LucasFA",
+    "author": "LucasFA",
+    "preview": true,
+    "license": "See LICENSE file",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/LucasFA/octave-lsp"
+    },
+    "bugs": {
+        "url": "https://github.com/LucasFA/octave-lsp/issues"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "keywords": [
+        "Octave",
+        "Octave Language"
+    ],
+    "engines": {
+        "vscode": "^1.66.0"
+    },
+    "scripts": {},
+    "dependencies": {
+        "vscode-languageclient": "^8.0.2"
+    },
+    "devDependencies": {
+        "@types/node": "^7.10.14",
+        "@types/vscode": "^1.73.1",
+        "typescript": "^4.9.3"
+    },
+    "activationEvents": [
+        "onLanguage:octave"
+    ],
+    "extensionKind": [
+        "workspace"
+    ],
+    "main": "./out/extension",
+    "contributes": {}
+}
