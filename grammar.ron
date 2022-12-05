@@ -1,6 +1,10 @@
 Grammar(
+    syntax_kinds: [
+        "Identifier",
+        "white_space",
+    ],
     keywords: [
-        "__FILE__"
+        "__FILE__",
         "__LINE__",
         "break",
         "case",

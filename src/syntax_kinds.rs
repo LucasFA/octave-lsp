@@ -1,16 +1,20 @@
+// Generated from grammar.ron
 use crate::tree::{SyntaxKind, SyntaxInfo};
 
-pub const IDENT: SyntaxKind = SyntaxKind(1);
-pub const WHITESPACE: SyntaxKind = SyntaxKind(2);
+pub const IDENTIFIER: SyntaxKind = SyntaxKind(0);
+pub const WHITE_SPACE: SyntaxKind = SyntaxKind(1);
 
-
-static IDENT_INFO: SyntaxInfo = SyntaxInfo {
-    name: "IDENT",
+static IDENTIFIER_INFO: SyntaxInfo = SyntaxInfo {
+   name: "IDENTIFIER",
+};
+static WHITE_SPACE_INFO: SyntaxInfo = SyntaxInfo {
+   name: "WHITE_SPACE",
 };
 
 pub(crate) fn syntax_info(kind: SyntaxKind) -> &'static SyntaxInfo {
     match kind {
-        IDENT => &IDENT_INFO,
-        _ => unreachable!(),
+        IDENTIFIER => &IDENTIFIER_INFO,
+        WHITE_SPACE => &WHITE_SPACE_INFO,
+        _ => unreachable!()
     }
 }

@@ -1,6 +1,7 @@
-use crate::{gen}
-fn main() -> Result<(), Box<dyn Error> {
-    generate()
+use crate::{gen};
+
+fn main() -> Result<(), Box<dyn Error>> {
+    unimplemented!()
 }
 
 // use std::error::Error;
