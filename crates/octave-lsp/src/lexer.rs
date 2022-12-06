@@ -1,6 +1,7 @@
 use logos::Logos;
+use num_derive::{FromPrimitive, ToPrimitive};
 
-#[derive(Logos, Debug, Copy, Clone, PartialEq, Hash, Eq, PartialOrd, Ord)]
+#[derive(Logos, Debug, Copy, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, FromPrimitive, ToPrimitive)]
 #[repr(u16)]
 pub(crate) enum SyntaxKind {
     Root,
@@ -30,9 +31,18 @@ pub(crate) enum SyntaxKind {
 
     #[token("{")]
     LBrace,
-
     #[token("}")]
     RBrace,
+
+    #[token("[")]
+    LBrat,
+    #[token("]")]
+    RBrat,
+
+    #[token("(")]
+    LParen,
+    #[token(")")]
+    RParen,
 
     // The name of a variable must be a sequence of letters, digits and underscores, but it may not begin with a digit.
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*")]
@@ -48,13 +58,7 @@ pub(crate) enum SyntaxKind {
     __LAST
 }
 
-impl From<u16> for SyntaxKind {
-    fn from(d: u16) -> SyntaxKind {
-        assert!(d < (SyntaxKind::__LAST as u16));
-        unsafe { std::mem::transmute::<u16, SyntaxKind>(d) }
-    }
-}
-
+#[cfg(test)]
 mod tests {
     use super::*;
 
