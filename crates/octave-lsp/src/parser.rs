@@ -1,5 +1,5 @@
 use crate::lexer::SyntaxKind;
-use crate::syntax::OctaveLanguage;
+use crate::syntax::{OctaveLanguage, SyntaxNode};
 use logos::Logos;
 use rowan::{GreenNode, GreenNodeBuilder, Language};
 
@@ -18,6 +18,12 @@ impl<'a> Parser<'a> {
 
     pub fn parse(mut self) -> Parse {
         self.start_node(SyntaxKind::Root);
+
+        if let Some(token) = self.lexer.next() {
+            self.builder.token(
+                OctaveLanguage::kind_to_raw(token),
+                self.lexer.slice().into())
+        }
         self.finish_node();
 
         Parse {
@@ -37,37 +43,61 @@ pub struct Parse {
     green_node: GreenNode,
 }
 
-impl From<SyntaxKind> for rowan::SyntaxKind {
-    fn from(kind: SyntaxKind) -> Self {
-        Self(kind as u16)
+impl Parse {
+    pub fn debug_tree(&self) -> String {
+        let syntax_node = SyntaxNode::new_root(self.green_node.clone());
+        let formatted = format!("{:#?}", syntax_node);
+
+        // We cut off the last byte because formatting the SyntaxNode adds on a newline at the end.
+        formatted[0..formatted.len() - 1].to_string()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::syntax::SyntaxNode;
     use expect_test::{expect, Expect};
 
     fn check(input: &str, expected_tree: Expect) {
         let parse = Parser::new(input).parse();
-        let syntax_node = SyntaxNode::new_root(parse.green_node);
 
-        let actual_tree = format!("{:#?}", syntax_node);
-
-        // We cut off the last byte because formatting the SyntaxNode adds on a newline at the end.
-        expected_tree.assert_eq(&actual_tree[0..actual_tree.len() - 1]);
+        expected_tree.assert_eq(&parse.debug_tree());
     }
-    
-    // This should not pass TODO
+
     #[test]
     fn parse_nothing() {
-        check(" hello 2783", expect![[r#"Root@0..0"#]]);
+        check("", expect![[r#"Root@0..0"#]]);
     }
 
-    // And this doesn't pass for probably the same reason
+    #[test]
+    fn parse_number() {
+        check(
+            "123",
+            expect![[r#"
+Root@0..3
+  Number@0..3 "123""#]],
+        );
+    }
+
     #[test]
     fn parse_identifier() {
-        check("hello", expect![[r#"Root@0..5"#]]);
+        check(
+            "hello",
+            expect![[r#"
+Root@0..5
+  Identifier@0..5 "hello""#]],
+        );
     }
+
+    #[test]
+    fn parse_whitespace_and_identifier() {
+        check(
+            "he llo ",
+            expect![[r#"
+Root@0..7  
+  Identifier@0..2 "he"
+  Whitespace@2..3 " "
+  Identifier@3..6 "llo""#]],
+            );
+        }
 }
