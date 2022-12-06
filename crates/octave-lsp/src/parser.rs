@@ -1,5 +1,8 @@
+mod expr;
+
 use crate::lexer::{SyntaxKind, Lexer};
 use crate::syntax::{OctaveLanguage, SyntaxNode};
+use expr::expr;
 use rowan::{GreenNode, GreenNodeBuilder, Language};
 use std::iter::Peekable;
 
@@ -19,9 +22,7 @@ impl<'a> Parser<'a> {
     pub fn parse(mut self) -> Parse {
         self.start_node(SyntaxKind::Root);
 
-        if let Some(_) = self.peek() {
-            self.bump();
-        }
+        expr(&mut self);
 
         self.finish_node();
 
@@ -64,61 +65,20 @@ impl Parse {
     }
 }
 
+
+#[cfg(test)]
+fn check(input: &str, expected_tree: expect_test::Expect) {
+    let parse = Parser::new(input).parse();
+    expected_tree.assert_eq(&parse.debug_tree());
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use expect_test::{expect, Expect};
-
-    fn check(input: &str, expected_tree: Expect) {
-        let parse = Parser::new(input).parse();
-
-        expected_tree.assert_eq(&parse.debug_tree());
-    }
+    use expect_test::expect;
 
     #[test]
     fn parse_nothing() {
         check("", expect![[r#"Root@0..0"#]]);
     }
-
-    #[test]
-    fn parse_number() {
-        check(
-            "123",
-            expect![[r#"
-Root@0..3
-  Number@0..3 "123""#]],
-        );
-    }
-
-    #[test]
-    fn parse_identifier() {
-        check(
-            "hello",
-            expect![[r#"
-Root@0..5
-  Identifier@0..5 "hello""#]],
-        );
-    }
-
-     #[test]
-    fn parse_binding_usage() {
-        check(
-            "counter",
-            expect![[r#"
-Root@0..7
-  Identifier@0..7 "counter""#]],
-        );
-    }
-
-    #[test]
-    fn parse_whitespace_and_identifier() {
-        check(
-            "he llo ",
-            expect![[r#"
-Root@0..7  
-  Identifier@0..2 "he"
-  Whitespace@2..3 " "
-  Identifier@3..6 "llo""#]],
-            );
-        }
 }
