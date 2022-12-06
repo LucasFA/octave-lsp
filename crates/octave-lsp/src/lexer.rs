@@ -46,6 +46,8 @@ pub(crate) enum SyntaxKind {
     #[token(")")]
     RParen,
 
+    BinaryOperator,
+
     // The name of a variable must be a sequence of letters, digits and underscores, but it may not begin with a digit.
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*")]
     Identifier,
