@@ -8,11 +8,12 @@ impl rowan::Language for OctaveLanguage {
     type Kind = SyntaxKind;
 
     fn kind_from_raw(raw: rowan::SyntaxKind) -> Self::Kind {
-        // use the __LAST field to make sure we don't miss any variants
+        assert!(raw.0 <= Self::Kind::__LAST.to_u16().unwrap());
         Self::Kind::from_u16(raw.0).unwrap()
     }
 
     fn kind_to_raw(kind: Self::Kind) -> rowan::SyntaxKind {
+        assert!(kind.to_u16().unwrap() <= Self::Kind::__LAST.to_u16().unwrap());
         rowan::SyntaxKind(kind.to_u16().unwrap())
     }
 }

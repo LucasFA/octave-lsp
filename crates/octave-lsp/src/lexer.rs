@@ -1,7 +1,9 @@
 use logos::Logos;
 use num_derive::{FromPrimitive, ToPrimitive};
 
-#[derive(Logos, Debug, Copy, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, FromPrimitive, ToPrimitive)]
+#[derive(
+    Logos, Debug, Copy, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, FromPrimitive, ToPrimitive,
+)]
 #[repr(u16)]
 pub(crate) enum SyntaxKind {
     Root,
@@ -55,7 +57,30 @@ pub(crate) enum SyntaxKind {
     Error,
 
     #[doc(hidden)]
-    __LAST
+    __LAST,
+}
+
+pub(crate) struct Lexer<'a> {
+    inner: logos::Lexer<'a, SyntaxKind>,
+}
+
+impl<'a> Lexer<'a> {
+    pub(crate) fn new(input: &'a str) -> Self {
+        Self {
+            inner: SyntaxKind::lexer(input),
+        }
+    }
+}
+
+impl<'a> Iterator for Lexer<'a> {
+    type Item = (SyntaxKind, &'a str);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let kind = self.inner.next()?;
+        let slice = self.inner.slice();
+
+        Some((kind, slice))
+    }
 }
 
 #[cfg(test)]
@@ -63,10 +88,9 @@ mod tests {
     use super::*;
 
     fn check(input: &str, kind: SyntaxKind) {
-        let mut lexer = SyntaxKind::lexer(input);
+        let mut lexer = Lexer::new(input);
 
-        assert_eq!(lexer.next(), Some(kind));
-        assert_eq!(lexer.slice(), input);
+        assert_eq!(lexer.next(), Some((kind, input)));
     }
 
     #[test]
@@ -108,7 +132,7 @@ mod tests {
     fn lex_float() {
         check("123.456", SyntaxKind::Number);
     }
-    
+
     #[test]
     fn lex_float2() {
         check(".456", SyntaxKind::Number);

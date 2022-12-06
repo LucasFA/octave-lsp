@@ -1,17 +1,17 @@
-use crate::lexer::SyntaxKind;
+use crate::lexer::{SyntaxKind, Lexer};
 use crate::syntax::{OctaveLanguage, SyntaxNode};
-use logos::Logos;
 use rowan::{GreenNode, GreenNodeBuilder, Language};
+use std::iter::Peekable;
 
 pub struct Parser<'a> {
-    lexer: logos::Lexer<'a, SyntaxKind>,
+    lexer: Peekable<Lexer<'a>>,
     builder: GreenNodeBuilder<'static>, // Could this be 'a?
 }
 
 impl<'a> Parser<'a> {
     pub fn new(input: &'a str) -> Self {
         Self {
-            lexer: SyntaxKind::lexer(input),
+            lexer: Lexer::new(input).peekable(),
             builder: GreenNodeBuilder::new(),
         }
     }
@@ -19,16 +19,27 @@ impl<'a> Parser<'a> {
     pub fn parse(mut self) -> Parse {
         self.start_node(SyntaxKind::Root);
 
-        if let Some(token) = self.lexer.next() {
-            self.builder.token(
-                OctaveLanguage::kind_to_raw(token),
-                self.lexer.slice().into())
+        if let Some(_) = self.peek() {
+            self.bump();
         }
+
         self.finish_node();
 
         Parse {
             green_node: self.builder.finish(),
         }
+    }
+
+    fn peek(&mut self) -> Option<SyntaxKind> {
+        self.lexer.peek().map(|(kind, _)| *kind)
+    }
+
+    fn bump(& mut self) {
+        let (kind, text) = self.lexer.next().unwrap();
+        self.builder.token(
+            OctaveLanguage::kind_to_raw(kind),
+            text
+        )
     }
 
     fn start_node(&mut self, kind: SyntaxKind) {
@@ -86,6 +97,16 @@ Root@0..3
             expect![[r#"
 Root@0..5
   Identifier@0..5 "hello""#]],
+        );
+    }
+
+     #[test]
+    fn parse_binding_usage() {
+        check(
+            "counter",
+            expect![[r#"
+Root@0..7
+  Identifier@0..7 "counter""#]],
         );
     }
 
