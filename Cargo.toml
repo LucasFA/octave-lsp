@@ -1,20 +1,2 @@
-[package]
-name = "octave-lsp-server"
-version = "0.1.0"
-edition = "2021"
-repository = "https://github.com/LucasFA/octave-lsp"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-# lsp-server = "0.6.0"
-# lsp-types = "0.93.0"
-serde = "1.0.143"
-serde_derive = "1.0.149"
-ron = "0.8.0"
-file = "1.1.2"
-logos = "0.12.1"
-pest = "2.5.1"
-
-[dev-dependencies]
-difference = "1.0.0"
+[workspace]
+members = ["crates/*"]
