@@ -10,13 +10,14 @@ use std::fmt::Write;
 
 fn main() {
     let grammar = Grammar::read();
-    let text = grammar.to_syntax_kinds();
+    let text = grammar.to_tokens();
     file::put_text(&generated_file(), &text).unwrap();
 }
 
 #[derive(Deserialize)]
 struct Grammar {
     syntax_kinds: Vec<String>,
+    operators: Vec<String>,
     keywords: Vec<String>,
 }
 
@@ -26,22 +27,34 @@ impl Grammar {
         ron::de::from_str(&text).unwrap()
     }
 
-    fn to_syntax_kinds(&self) -> String {
+    fn to_tokens(&self) -> String {
         let mut acc = String::new();
-        acc.push_str("// Generated from grammar.ron\n");
+        acc.push_str("// File generated from grammar.ron by executing gen.rs\n");
         acc.push_str("use crate::tree::{SyntaxKind, SyntaxInfo};\n");
+        acc.push_str("use logos::Logos;\n");
         acc.push_str("\n");
-        for (idx, kind) in self.syntax_kinds.iter().enumerate() {
-            let sname = scream(kind);
-            write!(
-                acc,
-                "pub const {}: SyntaxKind = SyntaxKind({});\n",
-                sname, idx
-            ).unwrap();
+
+        acc.push_str("#[derive(Logos, Debug, PartialEq)]\n");
+        acc.push_str("enum MyLexer {\n");
+
+        acc.push_str("    // Keywords:\n");
+        for keyword in &self.keywords {
+            acc.push_str("    #[token({keyword})]");
+            acc.push_str(keyword);
+            acc.push_str("\n\n");
         }
+
+        // for (idx, kind) in self.syntax_kinds.iter().enumerate() {
+        //     let sname = all_uppercase(kind);
+        //     write!(
+        //         acc,
+        //         "pub const {}: SyntaxKind = SyntaxKind({});\n",
+        //         sname, idx
+        //     ).unwrap();
+        // }
         acc.push_str("\n");
         for kind in self.syntax_kinds.iter() {
-            let sname = scream(kind);
+            let sname = all_uppercase(kind);
             write!(
                 acc,
                 "static {sname}_INFO: SyntaxInfo = SyntaxInfo {{\n   name: \"{sname}\",\n}};\n",
@@ -53,7 +66,7 @@ impl Grammar {
         acc.push_str("pub(crate) fn syntax_info(kind: SyntaxKind) -> &'static SyntaxInfo {\n");
         acc.push_str("    match kind {\n");
         for kind in self.syntax_kinds.iter() {
-            let sname = scream(kind);
+            let sname = all_uppercase(kind);
             write!(
                 acc,
                 "        {sname} => &{sname}_INFO,\n",
@@ -77,6 +90,6 @@ fn generated_file() -> PathBuf {
     PathBuf::from(dir).join("src/syntax_kinds.rs")
 }
 
-fn scream(word: &str) -> String {
+fn all_uppercase(word: &str) -> String {
     word.chars().map(|c| c.to_ascii_uppercase()).collect()
 }
