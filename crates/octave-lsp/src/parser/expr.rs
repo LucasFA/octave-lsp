@@ -87,14 +87,8 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::super::check;
     use expect_test::{expect, Expect};
-
-    fn check(input: &str, expected_tree: Expect) {
-        let parse = Parser::new(input).parse();
-
-        expected_tree.assert_eq(&parse.debug_tree());
-    }
 
     #[test]
     fn parse_identifier() {

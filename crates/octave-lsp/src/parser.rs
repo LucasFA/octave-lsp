@@ -11,44 +11,54 @@ use expr::expr;
 use rowan::GreenNode;
 use sink::Sink;
 
-use std::iter::Peekable;
-
-pub struct Parser<'a> {
-    lexer: Peekable<Lexer<'a>>,
+struct Parser<'l, 'input> {
+    lexemes: &'l [(SyntaxKind, &'input str)],
+    cursor: usize,
     events: Vec<Event>,
 }
 
-impl<'a> Parser<'a> {
-    pub fn new(input: &'a str) -> Self {
+pub fn parse(input: &str) -> Parse {
+    let lexemes: Vec<_> = Lexer::new(input).collect();
+    let parser = Parser::new(&lexemes);
+    let events = parser.parse();
+    let sink = Sink::new(&lexemes, events);
+
+    Parse {
+        green_node: sink.finish(),
+    }
+}
+
+impl<'l, 'input> Parser<'l, 'input> {
+    pub fn new(lexemes: &'l [(SyntaxKind, &'input str)]) -> Self {
         Self {
-            lexer: Lexer::new(input).peekable(),
+            lexemes,
+            cursor: 0,
             events: Vec::new(),
         }
     }
 
-    pub fn parse(mut self) -> Parse {
+    pub fn parse(mut self) -> Vec<Event> {
         self.start_node(SyntaxKind::Root);
-
         expr(&mut self);
-
         self.finish_node();
-        let sink = Sink::new(self.events);
 
-        Parse {
-            green_node: sink.finish(),
-        }
+        self.events
     }
 
-    fn peek(&mut self) -> Option<SyntaxKind> {
-        self.lexer.peek().map(|(kind, _)| *kind)
+    fn peek(&self) -> Option<SyntaxKind> {
+        self.lexemes
+            .get(self.cursor)
+            .map(|(kind, _)| *kind)
     }
 
     fn bump(&mut self) {
-        let (kind, text) = self.lexer.next().unwrap();
+        let (kind, text) = self.lexemes[self.cursor];
+
+        self.cursor += 1;
         self.events.push(Event::AddToken {
             kind,
             text: text.into(),
-        })
+        });
     }
 
     fn checkpoint(&self) -> usize {
@@ -83,7 +93,7 @@ impl Parse {
 
 #[cfg(test)]
 fn check(input: &str, expected_tree: expect_test::Expect) {
-    let parse = Parser::new(input).parse();
+    let parse = parse(input);
     expected_tree.assert_eq(&parse.debug_tree());
 }
 
