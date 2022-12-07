@@ -5,9 +5,14 @@ use num_derive::{FromPrimitive, ToPrimitive};
     Logos, Debug, Copy, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, FromPrimitive, ToPrimitive,
 )]
 #[repr(u16)]
+// #[logos(subpattern close_block_comment = r##"(#|%)\}"##)]
+// #[logos(subpattern open_block_comment = r##"(#|%)\{"##)]
 pub(crate) enum SyntaxKind {
     Root,
 
+    // This would be ideal for block comments, but logos doesn't support non-greedy regexes
+    // #[regex(r##"(#|%)\{\s*\n(.|\n)*?(#|%)\}"##)]
+    // Maybe we can use callbacks?
     #[regex("#.*")]
     #[regex("%.*")]
     Comment,
@@ -57,7 +62,8 @@ pub(crate) enum SyntaxKind {
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*")]
     Identifier,
     // A number is a sequence of digits, possibly containing a decimal point.
-    #[regex(r"\d*\.?\d*")]
+    #[regex(r"\d+")] // Integers
+    #[regex(r"\d*\.\d+")] // Floats
     Number,
 
     #[error]

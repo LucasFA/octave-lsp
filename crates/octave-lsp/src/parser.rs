@@ -124,4 +124,18 @@ Root@0..8
   Comment@0..8 "# hello!""##]],
         );
     }
+    // This doesn't yet pass
+//     #[test]
+//     fn parse_block_comment() {
+//         check(
+//             "#{
+//     hello!
+//     %}",
+//         expect![[r##"
+// Root@0..23
+//   BlockComment@0..23 "#{
+//     hello!
+//     %}"##]]);
+//     }
+
 }
