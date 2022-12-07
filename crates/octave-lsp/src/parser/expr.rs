@@ -31,7 +31,6 @@ impl PrefixOp {
     }
 }
 
-
 pub(super) fn expr(p: &mut Parser) {
     expr_binding_power(p, 0);
 }
@@ -50,17 +49,17 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
             p.start_node_at(checkpoint, SyntaxKind::PrefixOperator);
             expr_binding_power(p, right_binding_power);
             p.finish_node();
-        },
+        }
         Some(SyntaxKind::LParen) => {
             p.bump();
-            
+
             expr_binding_power(p, 0);
 
             assert_eq!(p.peek(), Some(SyntaxKind::RParen));
             p.bump();
-        },
-        _ => {},
-    } 
+        }
+        _ => {}
+    }
 
     loop {
         let op = match p.peek() {
@@ -88,7 +87,7 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
 #[cfg(test)]
 mod tests {
     use super::super::check;
-    use expect_test::{expect, Expect};
+    use expect_test::expect;
 
     #[test]
     fn parse_identifier() {
@@ -311,15 +310,15 @@ Root@0..35
         );
     }
 
-//     #[test]
-//     fn parse_whitespace_and_identifier() {
-//         check(
-//             "he + llo ",
-//             expect![[r#"
-// Root@0..7  
-//   Identifier@0..2 "he"
-//   Whitespace@2..3 " "
-//   Identifier@3..6 "llo""#]],
-//         );
-//     }
+    //     #[test]
+    //     fn parse_whitespace_and_identifier() {
+    //         check(
+    //             "he + llo ",
+    //             expect![[r#"
+    // Root@0..7
+    //   Identifier@0..2 "he"
+    //   Whitespace@2..3 " "
+    //   Identifier@3..6 "llo""#]],
+    //         );
+    //     }
 }
