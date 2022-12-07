@@ -46,7 +46,7 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
 
             p.bump();
 
-            p.start_node_at(checkpoint, SyntaxKind::PrefixOperator);
+            p.start_node_at(checkpoint, SyntaxKind::PrefixExpr);
             expr_binding_power(p, right_binding_power);
             p.finish_node();
         }
@@ -78,7 +78,7 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
 
         p.bump();
 
-        p.start_node_at(checkpoint, SyntaxKind::BinaryOperator);
+        p.start_node_at(checkpoint, SyntaxKind::BinaryExpr);
         expr_binding_power(p, right_binding_power);
         p.finish_node();
     }
@@ -115,7 +115,7 @@ Root@0..3
             "1+2",
             expect![[r#"
 Root@0..3
-  BinaryOperator@0..3
+  BinaryExpr@0..3
     Number@0..1 "1"
     Plus@1..2 "+"
     Number@2..3 "2""#]],
@@ -128,9 +128,9 @@ Root@0..3
             "1+2+3+4",
             expect![[r#"
 Root@0..7
-  BinaryOperator@0..7
-    BinaryOperator@0..5
-      BinaryOperator@0..3
+  BinaryExpr@0..7
+    BinaryExpr@0..5
+      BinaryExpr@0..3
         Number@0..1 "1"
         Plus@1..2 "+"
         Number@2..3 "2"
@@ -147,11 +147,11 @@ Root@0..7
             "1+2*3-4",
             expect![[r#"
 Root@0..7
-  BinaryOperator@0..7
-    BinaryOperator@0..5
+  BinaryExpr@0..7
+    BinaryExpr@0..5
       Number@0..1 "1"
       Plus@1..2 "+"
-      BinaryOperator@2..5
+      BinaryExpr@2..5
         Number@2..3 "2"
         Asterisk@3..4 "*"
         Number@4..5 "3"
@@ -166,7 +166,7 @@ Root@0..7
             "-1",
             expect![[r#"
 Root@0..2
-  PrefixOperator@0..2
+  PrefixExpr@0..2
     Minus@0..1 "-"
     Number@1..2 "1""#]],
         );
@@ -178,8 +178,8 @@ Root@0..2
             "-20+20",
             expect![[r#"
 Root@0..6
-  BinaryOperator@0..6
-    PrefixOperator@0..3
+  BinaryExpr@0..6
+    PrefixExpr@0..3
       Minus@0..1 "-"
       Number@1..3 "20"
     Plus@3..4 "+"
@@ -215,11 +215,11 @@ Root@0..14
             "5*(2+1)",
             expect![[r#"
 Root@0..7
-  BinaryOperator@0..7
+  BinaryExpr@0..7
     Number@0..1 "5"
     Asterisk@1..2 "*"
     LParen@2..3 "("
-    BinaryOperator@3..6
+    BinaryExpr@3..6
       Number@3..4 "2"
       Plus@4..5 "+"
       Number@5..6 "1"
@@ -268,12 +268,12 @@ Root@0..9
             expect![[r#"
 Root@0..12
   Whitespace@0..1 " "
-  BinaryOperator@1..12
+  BinaryExpr@1..12
     Number@1..2 "1"
     Whitespace@2..3 " "
     Plus@3..4 "+"
     Whitespace@4..7 "   "
-    BinaryOperator@7..12
+    BinaryExpr@7..12
       Number@7..8 "2"
       Asterisk@8..9 "*"
       Whitespace@9..10 " "
@@ -292,8 +292,8 @@ Root@0..12
             expect![[r##"
 Root@0..35
   Whitespace@0..1 "\n"
-  BinaryOperator@1..35
-    BinaryOperator@1..21
+  BinaryExpr@1..35
+    BinaryExpr@1..21
       Number@1..2 "1"
       Whitespace@2..5 "\n  "
       Plus@5..6 "+"
