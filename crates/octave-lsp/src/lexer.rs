@@ -16,6 +16,9 @@ pub(crate) enum SyntaxKind {
     #[token("endfunction")]
     EndFnKw,
 
+    BinaryOperator,
+    PrefixOperator,
+
     #[token("+")]
     Plus,
 
@@ -46,7 +49,6 @@ pub(crate) enum SyntaxKind {
     #[token(")")]
     RParen,
 
-    BinaryOperator,
 
     // The name of a variable must be a sequence of letters, digits and underscores, but it may not begin with a digit.
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*")]
@@ -126,6 +128,18 @@ mod tests {
     }
 
     #[test]
+    fn lex_single_char_identifier() {
+        check("x", SyntaxKind::Identifier);
+    }
+
+    #[test]
+    fn lex_underscore_identifier() {
+        // According to the GNU documentation,
+        // Names that begin and end with two underscores are understood to be reserved for internal use by Octave. You should not use them in code you write, except to access Octave’s documented internal variables and built-in symbolic constants.
+        check("__x__", SyntaxKind::Identifier);
+    }
+
+    #[test]
     fn lex_number() {
         check("123456", SyntaxKind::Number);
     }
@@ -174,4 +188,15 @@ mod tests {
     fn lex_right_brace() {
         check("}", SyntaxKind::RBrace);
     }
+
+     #[test]
+    fn lex_left_parenthesis() {
+        check("(", SyntaxKind::LParen);
+    }
+
+    #[test]
+    fn lex_right_parenthesis() {
+        check(")", SyntaxKind::RParen);
+    }
+
 }
