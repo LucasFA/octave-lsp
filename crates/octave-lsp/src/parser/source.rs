@@ -1,5 +1,6 @@
 use crate::lexer::{Lexeme, SyntaxKind};
 
+/// A wrapper around a list of lexemes that provides a cursor and some convenience methods.
 pub(super) struct Source<'l, 'input> {
     lexemes: &'l [Lexeme<'input>],
     cursor: usize,
@@ -33,12 +34,6 @@ impl<'l, 'input> Source<'l, 'input> {
     pub(super) fn peek_kind(&mut self) -> Option<SyntaxKind> {
         self.eat_trivia();
         self.peek_kind_raw()
-    }
-
-    fn eat_whitespace(&mut self) {
-        while self.peek_kind_raw() == Some(SyntaxKind::Whitespace) {
-            self.cursor += 1;
-        }
     }
 
     fn peek_kind_raw(&self) -> Option<SyntaxKind> {

@@ -18,6 +18,7 @@ struct Parser<'l, 'input> {
     events: Vec<Event>,
 }
 
+/// Actually parses the input into a tree of `SyntaxNode`s.
 pub fn parse(input: &str) -> Parse {
     let lexemes: Vec<_> = Lexer::new(input).collect();
     let parser = Parser::new(&lexemes);

@@ -1,6 +1,14 @@
+//! This module contains the lexer for Octave.
+//! 
+//! The lexer is implemented using the [logos](https://crates.io/crates/logos) crate.
+//! In general terms, the lexer takes a string as input and produces a stream of tokens as output.
+//! Those tokens are represented by the Lexeme struct, which holds the kind of the token and the text that it holds.
+
 use logos::Logos;
 use num_derive::{FromPrimitive, ToPrimitive};
 
+/// The kind of a token produced by the lexer.
+/// It is called this for consistency with Rowan, the parsing library.
 #[derive(
     Logos, Debug, Copy, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, FromPrimitive, ToPrimitive,
 )]
@@ -78,7 +86,7 @@ impl SyntaxKind {
         matches!(self, Self::Whitespace | Self::Comment)
     }
 }
-
+/// Logos wrapper.
 pub(crate) struct Lexer<'a> {
     inner: logos::Lexer<'a, SyntaxKind>,
 }
@@ -91,6 +99,7 @@ impl<'a> Lexer<'a> {
     }
 }
 
+/// The output of the lexer. It contains the kind of the token and the text associated.
 #[derive(Debug, PartialEq)]
 pub(crate) struct Lexeme<'a> {
     pub(crate) kind: SyntaxKind,

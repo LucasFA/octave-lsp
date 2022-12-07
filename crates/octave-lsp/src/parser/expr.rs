@@ -1,5 +1,5 @@
 ///a Parsing of expressions.
-///a This module contains the code for parsing __expressions__. 
+///a This module contains the code for parsing __expressions__.
 use super::Parser;
 use crate::lexer::SyntaxKind;
 
