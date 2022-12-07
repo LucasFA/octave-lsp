@@ -2,6 +2,7 @@
 
 mod event;
 mod expr;
+mod marker;
 mod sink;
 mod source;
 
@@ -9,6 +10,7 @@ use crate::lexer::{Lexeme, Lexer, SyntaxKind};
 use crate::syntax::SyntaxNode;
 use event::Event;
 use expr::expr;
+use marker::Marker;
 use rowan::GreenNode;
 use sink::Sink;
 use source::Source;
@@ -31,17 +33,24 @@ pub fn parse(input: &str) -> Parse {
 }
 
 impl<'l, 'input> Parser<'l, 'input> {
-    fn new(lexemes: &'l [Lexeme<'input>] ) -> Self {
+    fn new(lexemes: &'l [Lexeme<'input>]) -> Self {
         Self {
             source: Source::new(lexemes),
             events: Vec::new(),
         }
     }
 
-    pub fn parse(mut self) -> Vec<Event> {
-        self.start_node(SyntaxKind::Root);
+    fn start(&mut self) -> Marker {
+        let pos = self.events.len();
+        self.events.push(Event::Placeholder);
+
+        Marker::new(pos)
+    }
+
+    fn parse(mut self) -> Vec<Event> {
+        let m = self.start();
         expr(&mut self);
-        self.finish_node();
+        m.complete(&mut self, SyntaxKind::Root);
 
         self.events
     }
@@ -50,9 +59,8 @@ impl<'l, 'input> Parser<'l, 'input> {
         self.source.peek_kind()
     }
 
-
     fn bump(&mut self) {
-        let Lexeme {kind, text} = self.source.next_lexeme().unwrap();
+        let Lexeme { kind, text } = self.source.next_lexeme().unwrap();
 
         self.events.push(Event::AddToken {
             kind: *kind,
@@ -106,7 +114,7 @@ mod tests {
         check("", expect![[r#"Root@0..0"#]]);
     }
 
-     #[test]
+    #[test]
     fn parse_whitespace() {
         check(
             "   ",
@@ -126,17 +134,16 @@ Root@0..8
         );
     }
     // This doesn't yet pass
-//     #[test]
-//     fn parse_block_comment() {
-//         check(
-//             "#{
-//     hello!
-//     %}",
-//         expect![[r##"
-// Root@0..23
-//   BlockComment@0..23 "#{
-//     hello!
-//     %}"##]]);
-//     }
-
+    //     #[test]
+    //     fn parse_block_comment() {
+    //         check(
+    //             "#{
+    //     hello!
+    //     %}",
+    //         expect![[r##"
+    // Root@0..23
+    //   BlockComment@0..23 "#{
+    //     hello!
+    //     %}"##]]);
+    //     }
 }

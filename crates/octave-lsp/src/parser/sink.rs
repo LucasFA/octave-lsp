@@ -30,15 +30,15 @@ impl<'l, 'input> Sink<'l, 'input> {
                 reordered_events.insert(*checkpoint, Event::StartNode { kind: *kind });
             }
         }
-
         for event in reordered_events {
             match event {
                 Event::StartNode { kind } => {
                     self.builder.start_node(OctaveLanguage::kind_to_raw(kind))
                 }
                 Event::StartNodeAt { .. } => unreachable!(),
-                Event::AddToken { kind, text } => self.token(kind, text), 
+                Event::AddToken { kind, text } => self.token(kind, text),
                 Event::FinishNode => self.builder.finish_node(),
+                Event::Placeholder => unreachable!(),
             }
 
             self.eat_trivia();
