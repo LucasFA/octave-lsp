@@ -28,20 +28,38 @@ impl<'l, 'input> Sink<'l, 'input> {
                     kind,
                     forward_parent,
                 } => {
-                    if let Some(fp) = forward_parent {
-                        if let Event::StartNode { kind, .. } = self.events[idx + fp] {
-                            self.builder.start_node(OctaveLanguage::kind_to_raw(kind));
+                    let mut kinds = vec![kind];
+
+                    let mut idx = idx;
+                    let mut forward_parent = forward_parent;
+
+                    // Walk through the forward parent of the forward parent, and the forward parent
+                    // of that, and of that, etc. until we reach a StartNode event without a forward
+                    // parent.
+                    while let Some(fp) = forward_parent {
+                        idx += fp;
+
+                        forward_parent = if let Event::StartNode {
+                            kind,
+                            forward_parent,
+                        } =
+                            mem::replace(&mut self.events[idx], Event::Placeholder)
+                        {
+                            kinds.push(kind);
+                            forward_parent
                         } else {
                             unreachable!()
-                        }
+                        };
                     }
 
-                    self.builder.start_node(OctaveLanguage::kind_to_raw(kind));
+                    for kind in kinds.into_iter().rev() {
+                        self.builder.start_node(OctaveLanguage::kind_to_raw(kind));
+                    }
                 }
                 Event::StartNodeAt { .. } => unreachable!(),
                 Event::AddToken { kind, text } => self.token(kind, text),
                 Event::FinishNode => self.builder.finish_node(),
-                Event::Placeholder => unreachable!(),
+                Event::Placeholder => {}
             }
 
             self.eat_trivia();
@@ -49,6 +67,7 @@ impl<'l, 'input> Sink<'l, 'input> {
 
         self.builder.finish()
     }
+    
      fn eat_trivia(&mut self) {
         while let Some(lexeme) = self.lexemes.get(self.cursor) {
             if !lexeme.kind.is_trivia() {

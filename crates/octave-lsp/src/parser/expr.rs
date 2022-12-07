@@ -143,14 +143,17 @@ Root@0..7
   BinaryExpr@0..7
     BinaryExpr@0..5
       BinaryExpr@0..3
-        Number@0..1 "1"
+        Literal@0..1
+          Number@0..1 "1"
         Plus@1..2 "+"
-        Number@2..3 "2"
+        Literal@2..3
+          Number@2..3 "2"
       Plus@3..4 "+"
-      Number@4..5 "3"
+      Literal@4..5
+        Number@4..5 "3"
     Plus@5..6 "+"
-    Number@6..7 "4""#]],
-        );
+    Literal@6..7
+      Number@6..7 "4""#]],        );
     }
 
     #[test]
