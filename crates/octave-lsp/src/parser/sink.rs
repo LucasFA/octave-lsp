@@ -41,22 +41,22 @@ impl<'l, 'input> Sink<'l, 'input> {
                 Event::FinishNode => self.builder.finish_node(),
             }
 
-            self.eat_whitespace();
+            self.eat_trivia();
         }
 
         self.builder.finish()
     }
 
-    fn eat_whitespace(&mut self) {
+     fn eat_trivia(&mut self) {
         while let Some(lexeme) = self.lexemes.get(self.cursor) {
-            if lexeme.kind != SyntaxKind::Whitespace {
+            if !lexeme.kind.is_trivia() {
                 break;
             }
 
             self.token(lexeme.kind, lexeme.text.into());
         }
     }
-    // Can you borrow text here?
+    
     fn token(&mut self, kind: SyntaxKind, text: SmolStr) {
         self.builder.token(OctaveLanguage::kind_to_raw(kind), text.as_str());
         self.cursor += 1;

@@ -8,7 +8,11 @@ use num_derive::{FromPrimitive, ToPrimitive};
 pub(crate) enum SyntaxKind {
     Root,
 
-    #[regex(" +")]
+    #[regex("#.*")]
+    #[regex("%.*")]
+    Comment,
+
+    #[regex("[ \n\r\t]+")]
     Whitespace,
 
     #[token("function")]
@@ -61,6 +65,12 @@ pub(crate) enum SyntaxKind {
 
     #[doc(hidden)]
     __LAST,
+}
+
+impl SyntaxKind {
+    pub(crate) fn is_trivia(self) -> bool {
+        matches!(self, Self::Whitespace | Self::Comment)
+    }
 }
 
 pub(crate) struct Lexer<'a> {
@@ -202,5 +212,20 @@ mod tests {
     #[test]
     fn lex_right_parenthesis() {
         check(")", SyntaxKind::RParen);
+    }
+
+    #[test]
+    fn lex_spaces_and_newlines() {
+        check("  \n ", SyntaxKind::Whitespace);
+    }
+
+    #[test]
+    fn lex_comment_hash() {
+        check("# foo", SyntaxKind::Comment);
+    }
+
+    #[test]
+    fn lex_comment_percent() {
+        check("% foo", SyntaxKind::Comment);
     }
 }
