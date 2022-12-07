@@ -4,7 +4,7 @@ mod event;
 mod expr;
 mod sink;
 
-use crate::lexer::{Lexer, SyntaxKind};
+use crate::lexer::{Lexeme, Lexer, SyntaxKind};
 use crate::syntax::SyntaxNode;
 use event::Event;
 use expr::expr;
@@ -12,7 +12,7 @@ use rowan::GreenNode;
 use sink::Sink;
 
 struct Parser<'l, 'input> {
-    lexemes: &'l [(SyntaxKind, &'input str)],
+    lexemes: &'l [Lexeme<'input>],
     cursor: usize,
     events: Vec<Event>,
 }
@@ -29,7 +29,7 @@ pub fn parse(input: &str) -> Parse {
 }
 
 impl<'l, 'input> Parser<'l, 'input> {
-    pub fn new(lexemes: &'l [(SyntaxKind, &'input str)]) -> Self {
+    fn new(lexemes: &'l [Lexeme<'input>] ) -> Self {
         Self {
             lexemes,
             cursor: 0,
@@ -48,11 +48,11 @@ impl<'l, 'input> Parser<'l, 'input> {
     fn peek(&self) -> Option<SyntaxKind> {
         self.lexemes
             .get(self.cursor)
-            .map(|(kind, _)| *kind)
+            .map(|Lexeme {kind, ..} | *kind)
     }
 
     fn bump(&mut self) {
-        let (kind, text) = self.lexemes[self.cursor];
+        let Lexeme {kind, text} = self.lexemes[self.cursor];
 
         self.cursor += 1;
         self.events.push(Event::AddToken {

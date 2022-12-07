@@ -2,7 +2,7 @@ use logos::Logos;
 use num_derive::{FromPrimitive, ToPrimitive};
 
 #[derive(
-    Logos, Debug, Copy, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, FromPrimitive, ToPrimitive
+    Logos, Debug, Copy, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, FromPrimitive, ToPrimitive,
 )]
 #[repr(u16)]
 pub(crate) enum SyntaxKind {
@@ -49,7 +49,6 @@ pub(crate) enum SyntaxKind {
     #[token(")")]
     RParen,
 
-
     // The name of a variable must be a sequence of letters, digits and underscores, but it may not begin with a digit.
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*")]
     Identifier,
@@ -76,14 +75,20 @@ impl<'a> Lexer<'a> {
     }
 }
 
+#[derive(Debug, PartialEq)]
+pub(crate) struct Lexeme<'a> {
+    pub(crate) kind: SyntaxKind,
+    pub(crate) text: &'a str,
+}
+
 impl<'a> Iterator for Lexer<'a> {
-    type Item = (SyntaxKind, &'a str);
+    type Item = Lexeme<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let kind = self.inner.next()?;
-        let slice = self.inner.slice();
+        let text = self.inner.slice();
 
-        Some((kind, slice))
+        Some(Self::Item { kind, text })
     }
 }
 
@@ -94,7 +99,7 @@ mod tests {
     fn check(input: &str, kind: SyntaxKind) {
         let mut lexer = Lexer::new(input);
 
-        assert_eq!(lexer.next(), Some((kind, input)));
+        assert_eq!(lexer.next(), Some(Lexeme { kind, text: input }));
     }
 
     #[test]
@@ -189,7 +194,7 @@ mod tests {
         check("}", SyntaxKind::RBrace);
     }
 
-     #[test]
+    #[test]
     fn lex_left_parenthesis() {
         check("(", SyntaxKind::LParen);
     }
@@ -198,5 +203,4 @@ mod tests {
     fn lex_right_parenthesis() {
         check(")", SyntaxKind::RParen);
     }
-
 }
