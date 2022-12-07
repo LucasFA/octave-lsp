@@ -228,6 +228,61 @@ Root@0..7
         );
     }
 
+    #[test]
+    fn parse_number_preceded_by_whitespace() {
+        check(
+            "   9876",
+            expect![[r#"
+Root@0..7
+  Whitespace@0..3 "   "
+  Number@3..7 "9876""#]],
+        );
+    }
+
+    #[test]
+    fn parse_number_followed_by_whitespace() {
+        check(
+            "999   ",
+            expect![[r#"
+Root@0..6
+  Number@0..3 "999"
+  Whitespace@3..6 "   ""#]],
+        );
+    }
+
+    #[test]
+    fn parse_number_surrounded_by_whitespace() {
+        check(
+            " 123     ",
+            expect![[r#"
+Root@0..9
+  Whitespace@0..1 " "
+  Number@1..4 "123"
+  Whitespace@4..9 "     ""#]],
+        );
+    }
+
+    #[test]
+    fn parse_binary_expression_with_whitespace() {
+        check(
+            " 1 +   2* 3 ",
+            expect![[r#"
+Root@0..12
+  Whitespace@0..1 " "
+  BinaryOperator@1..12
+    Number@1..2 "1"
+    Whitespace@2..3 " "
+    Plus@3..4 "+"
+    Whitespace@4..7 "   "
+    BinaryOperator@7..12
+      Number@7..8 "2"
+      Asterisk@8..9 "*"
+      Whitespace@9..10 " "
+      Number@10..11 "3"
+      Whitespace@11..12 " ""#]],
+        );
+    }
+
 //     #[test]
 //     fn parse_whitespace_and_identifier() {
 //         check(
