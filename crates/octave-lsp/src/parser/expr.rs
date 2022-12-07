@@ -1,3 +1,4 @@
+use super::marker::CompletedMarker;
 ///a Parsing of expressions.
 ///a This module contains the code for parsing __expressions__.
 use super::Parser;
@@ -35,8 +36,8 @@ pub(super) fn expr(p: &mut Parser) {
     expr_binding_power(p, 0);
 }
 
-fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
-    let mut lhs = match p.peek() {
+fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
+    let ret = match p.peek() {
         Some(SyntaxKind::Number) => {
             let m = p.start();
             p.bump();
@@ -71,7 +72,15 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
 
             m.complete(p, SyntaxKind::ParenExpr)
         }
-        _ => return, // we’ll handle errors later.
+        _ => return None,
+    };
+    Some(ret)
+}
+
+fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
+    let mut lhs = match lhs(p) {
+        Some(c_marker) => c_marker,
+        _ => return,
     };
 
     loop {
@@ -157,7 +166,8 @@ Root@0..7
         Number@4..5 "3"
     Plus@5..6 "+"
     Literal@6..7
-      Number@6..7 "4""#]],        );
+      Number@6..7 "4""#]],
+        );
     }
 
     #[test]
