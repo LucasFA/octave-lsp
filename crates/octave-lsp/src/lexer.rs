@@ -18,6 +18,12 @@ use num_derive::{FromPrimitive, ToPrimitive};
 pub(crate) enum SyntaxKind {
     Root,
 
+    Literal,
+    ParenExpr,
+    VariableRef,
+    BinaryExpr,
+    PrefixExpr,
+
     // This would be ideal for block comments, but logos doesn't support non-greedy regexes
     // #[regex(r##"(#|%)\{\s*\n(.|\n)*?(#|%)\}"##)]
     // Maybe we can use callbacks?
@@ -32,9 +38,6 @@ pub(crate) enum SyntaxKind {
     FnKw,
     #[token("endfunction")]
     EndFnKw,
-
-    BinaryOperator,
-    PrefixOperator,
 
     #[token("+")]
     Plus,
