@@ -1,23 +1,28 @@
 //! This module contains the parser for the Octave language.
 
+mod event;
 mod expr;
+mod sink;
 
-use crate::lexer::{SyntaxKind, Lexer};
-use crate::syntax::{OctaveLanguage, SyntaxNode};
+use crate::lexer::{Lexer, SyntaxKind};
+use crate::syntax::SyntaxNode;
+use event::Event;
 use expr::expr;
-use rowan::{Checkpoint, GreenNode, GreenNodeBuilder, Language};
+use rowan::GreenNode;
+use sink::Sink;
+
 use std::iter::Peekable;
 
 pub struct Parser<'a> {
     lexer: Peekable<Lexer<'a>>,
-    builder: GreenNodeBuilder<'static>, // Could this be 'a?
+    events: Vec<Event>,
 }
 
 impl<'a> Parser<'a> {
     pub fn new(input: &'a str) -> Self {
         Self {
             lexer: Lexer::new(input).peekable(),
-            builder: GreenNodeBuilder::new(),
+            events: Vec::new(),
         }
     }
 
@@ -27,9 +32,10 @@ impl<'a> Parser<'a> {
         expr(&mut self);
 
         self.finish_node();
+        let sink = Sink::new(self.events);
 
         Parse {
-            green_node: self.builder.finish(),
+            green_node: sink.finish(),
         }
     }
 
@@ -37,28 +43,27 @@ impl<'a> Parser<'a> {
         self.lexer.peek().map(|(kind, _)| *kind)
     }
 
-    fn bump(& mut self) {
+    fn bump(&mut self) {
         let (kind, text) = self.lexer.next().unwrap();
-        self.builder.token(
-            OctaveLanguage::kind_to_raw(kind),
-            text
-        )
+        self.events.push(Event::AddToken {
+            kind,
+            text: text.into(),
+        })
     }
 
-    fn checkpoint(&self) -> Checkpoint {
-        self.builder.checkpoint()
+    fn checkpoint(&self) -> usize {
+        self.events.len()
     }
 
-    fn start_node_at(&mut self, checkpoint: Checkpoint, kind: SyntaxKind) {
-        self.builder
-            .start_node_at(checkpoint, OctaveLanguage::kind_to_raw(kind));
+    fn start_node_at(&mut self, checkpoint: usize, kind: SyntaxKind) {
+        self.events.push(Event::StartNodeAt { kind, checkpoint });
     }
 
     fn start_node(&mut self, kind: SyntaxKind) {
-        self.builder.start_node(OctaveLanguage::kind_to_raw(kind));
+        self.events.push(Event::StartNode { kind });
     }
     fn finish_node(&mut self) {
-        self.builder.finish_node();
+        self.events.push(Event::FinishNode);
     }
 }
 
@@ -75,7 +80,6 @@ impl Parse {
         formatted[0..formatted.len() - 1].to_string()
     }
 }
-
 
 #[cfg(test)]
 fn check(input: &str, expected_tree: expect_test::Expect) {
