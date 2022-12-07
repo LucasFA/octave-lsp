@@ -67,25 +67,6 @@ impl<'l, 'input> Parser<'l, 'input> {
             text: (*text).into(),
         });
     }
-
-    fn checkpoint(&self) -> usize {
-        self.events.len()
-    }
-
-    fn start_node_at(&mut self, checkpoint: usize, kind: SyntaxKind) {
-        self.events.push(Event::StartNodeAt { kind, checkpoint });
-    }
-
-    fn start_node(&mut self, kind: SyntaxKind) {
-        self.events.push(Event::StartNode {
-            kind,
-            forward_parent: None,
-        });
-    }
-    
-    fn finish_node(&mut self) {
-        self.events.push(Event::FinishNode);
-    }
 }
 
 pub struct Parse {
