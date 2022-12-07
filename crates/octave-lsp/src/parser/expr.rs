@@ -36,30 +36,43 @@ pub(super) fn expr(p: &mut Parser) {
 }
 
 fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
-    let checkpoint = p.checkpoint();
-
-    match p.peek() {
-        Some(SyntaxKind::Number) | Some(SyntaxKind::Identifier) => p.bump(),
+    let mut lhs = match p.peek() {
+        Some(SyntaxKind::Number) => {
+            let m = p.start();
+            p.bump();
+            m.complete(p, SyntaxKind::Literal)
+        }
+        Some(SyntaxKind::Identifier) => {
+            let m = p.start();
+            p.bump();
+            m.complete(p, SyntaxKind::VariableRef)
+        }
         Some(SyntaxKind::Minus) => {
+            let m = p.start();
+
             let op = PrefixOp::Neg;
             let ((), right_binding_power) = op.binding_power();
 
+            // Eat the operator’s token.
             p.bump();
 
-            p.start_node_at(checkpoint, SyntaxKind::PrefixExpr);
             expr_binding_power(p, right_binding_power);
-            p.finish_node();
+
+            m.complete(p, SyntaxKind::PrefixExpr)
         }
         Some(SyntaxKind::LParen) => {
-            p.bump();
+            let m = p.start();
 
+            p.bump();
             expr_binding_power(p, 0);
 
             assert_eq!(p.peek(), Some(SyntaxKind::RParen));
             p.bump();
+
+            m.complete(p, SyntaxKind::ParenExpr)
         }
-        _ => {}
-    }
+        _ => return, // we’ll handle errors later.
+    };
 
     loop {
         let op = match p.peek() {
@@ -75,12 +88,11 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
         if left_binding_power < minimum_binding_power {
             return;
         }
-
         p.bump();
 
-        p.start_node_at(checkpoint, SyntaxKind::BinaryExpr);
+        let m = lhs.precede(p);
         expr_binding_power(p, right_binding_power);
-        p.finish_node();
+        lhs = m.complete(p, SyntaxKind::BinaryExpr);
     }
 }
 

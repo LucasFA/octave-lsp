@@ -3,7 +3,7 @@ use crate::lexer::{Lexeme, SyntaxKind};
 use crate::syntax::OctaveLanguage;
 use rowan::{GreenNode, GreenNodeBuilder, Language};
 use smol_str::SmolStr;
-
+use std::mem;
 pub(super) struct Sink<'l, 'input> {
     builder: GreenNodeBuilder<'static>,
     lexemes: &'l [Lexeme<'input>],
@@ -22,18 +22,21 @@ impl<'l, 'input> Sink<'l, 'input> {
     }
 
     pub(super) fn finish(mut self) -> GreenNode {
-        let mut reordered_events = self.events.clone();
+        for idx in 0..self.events.len() {
+            match mem::replace(&mut self.events[idx], Event::Placeholder) {
+                Event::StartNode {
+                    kind,
+                    forward_parent,
+                } => {
+                    if let Some(fp) = forward_parent {
+                        if let Event::StartNode { kind, .. } = self.events[idx + fp] {
+                            self.builder.start_node(OctaveLanguage::kind_to_raw(kind));
+                        } else {
+                            unreachable!()
+                        }
+                    }
 
-        for (idx, event) in self.events.iter().enumerate() {
-            if let Event::StartNodeAt { kind, checkpoint } = event {
-                reordered_events.remove(idx);
-                reordered_events.insert(*checkpoint, Event::StartNode { kind: *kind });
-            }
-        }
-        for event in reordered_events {
-            match event {
-                Event::StartNode { kind } => {
-                    self.builder.start_node(OctaveLanguage::kind_to_raw(kind))
+                    self.builder.start_node(OctaveLanguage::kind_to_raw(kind));
                 }
                 Event::StartNodeAt { .. } => unreachable!(),
                 Event::AddToken { kind, text } => self.token(kind, text),
@@ -46,7 +49,6 @@ impl<'l, 'input> Sink<'l, 'input> {
 
         self.builder.finish()
     }
-
      fn eat_trivia(&mut self) {
         while let Some(lexeme) = self.lexemes.get(self.cursor) {
             if !lexeme.kind.is_trivia() {

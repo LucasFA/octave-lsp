@@ -19,10 +19,10 @@ pub(crate) enum SyntaxKind {
     Root,
 
     Literal,
-    ParenExpr,
-    VariableRef,
     BinaryExpr,
+    ParenExpr,
     PrefixExpr,
+    VariableRef,
 
     // This would be ideal for block comments, but logos doesn't support non-greedy regexes
     // #[regex(r##"(#|%)\{\s*\n(.|\n)*?(#|%)\}"##)]
