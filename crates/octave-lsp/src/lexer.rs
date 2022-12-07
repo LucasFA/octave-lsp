@@ -2,7 +2,7 @@ use logos::Logos;
 use num_derive::{FromPrimitive, ToPrimitive};
 
 #[derive(
-    Logos, Debug, Copy, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, FromPrimitive, ToPrimitive,
+    Logos, Debug, Copy, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, FromPrimitive, ToPrimitive
 )]
 #[repr(u16)]
 pub(crate) enum SyntaxKind {
