@@ -1,3 +1,5 @@
+//! This module contains the parser for the Octave language.
+
 mod expr;
 
 use crate::lexer::{SyntaxKind, Lexer};

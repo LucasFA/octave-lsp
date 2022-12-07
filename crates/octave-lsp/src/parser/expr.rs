@@ -1,3 +1,6 @@
+/// Parsing of expressions.
+/// This module contains the code for parsing expressions. It is a recursive descent parser.
+
 use super::Parser;
 use crate::lexer::SyntaxKind;
 
