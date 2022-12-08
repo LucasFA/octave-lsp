@@ -1,4 +1,5 @@
-use crate::lexer::{SyntaxKind, Token};
+use crate::syntax::SyntaxKind;
+use lexer::Token;
 
 /// A wrapper around a list of tokens that provides a cursor and some convenience methods.
 pub(super) struct Source<'t, 'input> {
@@ -36,6 +37,8 @@ impl<'t, 'input> Source<'t, 'input> {
     }
 
     fn peek_kind_raw(&self) -> Option<SyntaxKind> {
-        self.tokens.get(self.cursor).map(|Token { kind, .. }| *kind)
+        self.tokens
+            .get(self.cursor)
+            .map(|Token { kind, .. }| (*kind).into())
     }
 }

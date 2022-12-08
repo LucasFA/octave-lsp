@@ -1,8 +1,8 @@
-use super::marker::CompletedMarker;
 ///a Parsing of expressions.
 ///a This module contains the code for parsing __expressions__.
+use super::marker::CompletedMarker;
 use super::Parser;
-use crate::lexer::SyntaxKind;
+use crate::syntax::SyntaxKind;
 
 enum BinaryOp {
     Add,
