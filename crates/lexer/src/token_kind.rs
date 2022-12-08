@@ -2,7 +2,7 @@ use logos::Logos;
 
 /// The kind of a token produced by the lexer.
 /// It is called this for consistency with Rowan, the parsing library.
-#[derive(Logos, Debug, Copy, Clone, PartialEq)]
+#[derive(Logos, Debug, Copy, Clone, PartialEq, Eq)]
 #[repr(u16)]
 // #[logos(subpattern close_block_comment = r##"(#|%)\}"##)]
 // #[logos(subpattern open_block_comment = r##"(#|%)\{"##)]

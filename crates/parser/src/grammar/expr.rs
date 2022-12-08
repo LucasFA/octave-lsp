@@ -3,8 +3,6 @@
 use crate::parser::marker::CompletedMarker;
 use crate::parser::Parser;
 use syntax::SyntaxKind;
-use super::*;
-
 
 enum BinaryOp {
     Add,

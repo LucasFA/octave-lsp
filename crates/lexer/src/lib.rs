@@ -39,4 +39,3 @@ impl<'a> Iterator for Lexer<'a> {
         Some(Self::Item { kind, text })
     }
 }
-

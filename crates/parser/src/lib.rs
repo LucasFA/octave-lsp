@@ -6,13 +6,12 @@ mod parser;
 mod sink;
 mod source;
 
-use lexer::Lexer;
 use crate::parser::Parser;
+use lexer::Lexer;
 use rowan::GreenNode;
 use sink::Sink;
 use source::Source;
 use syntax::SyntaxNode;
-
 
 /// Actually parses the input into a tree of `SyntaxNode`s.
 
