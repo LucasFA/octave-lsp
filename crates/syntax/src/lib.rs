@@ -1,3 +1,6 @@
+//! Defines the equivalence from Lexical tokens to Syntactical tokens.
+//! 
+
 use lexer::TokenKind;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};

@@ -12,7 +12,7 @@ pub enum TokenKind {
     // Maybe we can use callbacks?
     // The current solution matches a bit more than it should, but it actually allows us to parse better
     // It also matches block comments that end in "#} foobar" (which is a line which should not end it, technically, but is most likely user error)
-    // #[regex(r##"(.*[#%]\{.*\n)((?:[^#%]|[#%][^}])*)([#%]\})"##)] well this breaks everything
+    // #[regex(r##"(.*[#%]\{.*\n)((?:[^#%]|[#%][^}])*)([#%]\})"##)] // well this breaks everything
     #[regex("[#%].*")]
     Comment,
 
