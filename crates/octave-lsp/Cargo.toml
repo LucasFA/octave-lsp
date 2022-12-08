@@ -7,9 +7,8 @@ edition = "2021"
 
 [dependencies]
 lexer = {path = "../lexer"}
+syntax = {path = "../syntax"}
 drop_bomb = "0.1.5"
-num-derive = "0.3.3"
-num-traits = "0.2.15"
 rowan = "0.15.10"
 smol_str = "0.1.23"
 

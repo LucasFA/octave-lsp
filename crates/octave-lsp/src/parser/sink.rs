@@ -1,5 +1,5 @@
 use super::event::Event;
-use crate::syntax::{OctaveLanguage, SyntaxKind};
+use syntax::{OctaveLanguage, SyntaxKind};
 use lexer::Token;
 use rowan::{GreenNode, GreenNodeBuilder, Language};
 use std::mem;

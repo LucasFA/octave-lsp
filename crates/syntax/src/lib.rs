@@ -3,7 +3,7 @@ use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-pub(crate) enum OctaveLanguage {}
+pub enum OctaveLanguage {}
 
 impl rowan::Language for OctaveLanguage {
     type Kind = SyntaxKind;
@@ -17,9 +17,9 @@ impl rowan::Language for OctaveLanguage {
     }
 }
 
-pub(crate) type SyntaxNode = rowan::SyntaxNode<OctaveLanguage>;
+pub type SyntaxNode = rowan::SyntaxNode<OctaveLanguage>;
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, FromPrimitive, ToPrimitive)]
-pub(crate) enum SyntaxKind {
+pub enum SyntaxKind {
     Whitespace,
     FnKw,
     EndFnKw,
@@ -48,7 +48,7 @@ pub(crate) enum SyntaxKind {
 }
 
 impl SyntaxKind {
-    pub(crate) fn is_trivia(self) -> bool {
+    pub fn is_trivia(self) -> bool {
         matches!(self, Self::Whitespace | Self::Comment)
     }
 }

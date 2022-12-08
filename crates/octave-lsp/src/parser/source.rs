@@ -1,4 +1,4 @@
-use crate::syntax::SyntaxKind;
+use syntax::SyntaxKind;
 use lexer::Token;
 
 /// A wrapper around a list of tokens that provides a cursor and some convenience methods.

@@ -2,7 +2,7 @@
 ///a This module contains the code for parsing __expressions__.
 use super::marker::CompletedMarker;
 use super::Parser;
-use crate::syntax::SyntaxKind;
+use syntax::SyntaxKind;
 
 enum BinaryOp {
     Add,
