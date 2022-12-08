@@ -32,8 +32,8 @@ impl UnaryOp {
     }
 }
 
-pub(super) fn expr(p: &mut Parser) {
-    expr_binding_power(p, 0);
+pub(super) fn expr(p: &mut Parser) -> Option<CompletedMarker> {
+    expr_binding_power(p, 0)
 }
 
 fn literal(p: &mut Parser) -> CompletedMarker {
@@ -94,11 +94,8 @@ fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
     Some(cm)
 }
 
-fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
-    let mut lhs = match lhs(p) {
-        Some(c_marker) => c_marker,
-        _ => return,
-    };
+fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) -> Option<CompletedMarker> {
+    let mut lhs = lhs(p)?;
 
     loop {
         let op = match p.peek() {
@@ -106,13 +103,13 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
             Some(SyntaxKind::Minus) => BinaryOp::Sub,
             Some(SyntaxKind::Asterisk) => BinaryOp::Mul,
             Some(SyntaxKind::Slash) => BinaryOp::Div,
-            _ => return, // we’ll handle errors later.
+            _ => return None, // we’ll handle errors later.
         };
 
         let (left_binding_power, right_binding_power) = op.binding_power();
 
         if left_binding_power < minimum_binding_power {
-            return;
+            break;
         }
         p.bump();
 
@@ -120,6 +117,8 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
         expr_binding_power(p, right_binding_power);
         lhs = m.complete(p, SyntaxKind::InfixExpr);
     }
+
+    Some(lhs)
 }
 
 #[cfg(test)]
