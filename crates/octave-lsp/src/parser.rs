@@ -55,6 +55,10 @@ impl<'l, 'input> Parser<'l, 'input> {
         self.events
     }
 
+    fn at(&mut self, kind: SyntaxKind) -> bool {
+        self.peek() == Some(kind)
+    }
+
     fn peek(&mut self) -> Option<SyntaxKind> {
         self.source.peek_kind()
     }
