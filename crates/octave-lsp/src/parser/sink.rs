@@ -1,5 +1,5 @@
 use super::event::Event;
-use crate::lexer::{Lexeme, SyntaxKind};
+use crate::lexer::{SyntaxKind, Token};
 use crate::syntax::OctaveLanguage;
 use rowan::{GreenNode, GreenNodeBuilder, Language};
 use smol_str::SmolStr;
@@ -7,16 +7,16 @@ use std::mem;
 
 pub(super) struct Sink<'l, 'input> {
     builder: GreenNodeBuilder<'static>,
-    lexemes: &'l [Lexeme<'input>],
+    tokens: &'l [Token<'input>],
     cursor: usize,
     events: Vec<Event>,
 }
 
 impl<'l, 'input> Sink<'l, 'input> {
-    pub(super) fn new(lexemes: &'l [Lexeme<'input>], events: Vec<Event>) -> Self {
+    pub(super) fn new(tokens: &'l [Token<'input>], events: Vec<Event>) -> Self {
         Self {
             builder: GreenNodeBuilder::new(),
-            lexemes,
+            tokens,
             cursor: 0,
             events,
         }
@@ -69,12 +69,12 @@ impl<'l, 'input> Sink<'l, 'input> {
     }
 
     fn eat_trivia(&mut self) {
-        while let Some(lexeme) = self.lexemes.get(self.cursor) {
-            if !lexeme.kind.is_trivia() {
+        while let Some(token) = self.tokens.get(self.cursor) {
+            if !token.kind.is_trivia() {
                 break;
             }
 
-            self.token(lexeme.kind, lexeme.text.into());
+            self.token(token.kind, token.text.into());
         }
     }
 

@@ -1,23 +1,23 @@
-use crate::lexer::{Lexeme, SyntaxKind};
+use crate::lexer::{SyntaxKind, Token};
 
-/// A wrapper around a list of lexemes that provides a cursor and some convenience methods.
+/// A wrapper around a list of tokens that provides a cursor and some convenience methods.
 pub(super) struct Source<'l, 'input> {
-    lexemes: &'l [Lexeme<'input>],
+    tokens: &'l [Token<'input>],
     cursor: usize,
 }
 
 impl<'l, 'input> Source<'l, 'input> {
-    pub(super) fn new(lexemes: &'l [Lexeme<'input>]) -> Self {
-        Self { lexemes, cursor: 0 }
+    pub(super) fn new(tokens: &'l [Token<'input>]) -> Self {
+        Self { tokens, cursor: 0 }
     }
 
-    pub(super) fn next_lexeme(&mut self) -> Option<&'l Lexeme<'input>> {
+    pub(super) fn next_token(&mut self) -> Option<&'l Token<'input>> {
         self.eat_trivia();
 
-        let lexeme = self.lexemes.get(self.cursor)?;
+        let token = self.tokens.get(self.cursor)?;
         self.cursor += 1;
 
-        Some(lexeme)
+        Some(token)
     }
 
     fn eat_trivia(&mut self) {
@@ -36,8 +36,6 @@ impl<'l, 'input> Source<'l, 'input> {
     }
 
     fn peek_kind_raw(&self) -> Option<SyntaxKind> {
-        self.lexemes
-            .get(self.cursor)
-            .map(|Lexeme { kind, .. }| *kind)
+        self.tokens.get(self.cursor).map(|Token { kind, .. }| *kind)
     }
 }
