@@ -27,8 +27,10 @@ pub(crate) enum SyntaxKind {
     // This would be ideal for block comments, but logos doesn't support non-greedy regexes
     // #[regex(r##"(#|%)\{\s*\n(.|\n)*?(#|%)\}"##)]
     // Maybe we can use callbacks?
-    #[regex("#.*")]
-    #[regex("%.*")]
+    // The current solution matches a bit more than it should, but it actually allows us to parse better
+    // It also matches block comments that end in "#} foobar" (which is a line which should not end it, technically, but is most likely user error)
+    #[regex(r##"(.*[#%]\{.*\n)((?:[^#%]|[#%][^}])*)([#%]\})"##)]
+    #[regex("[#%].*")]
     Comment,
 
     #[regex("[ \n\r\t]+")]
