@@ -15,8 +15,8 @@ use rowan::GreenNode;
 use sink::Sink;
 use source::Source;
 
-struct Parser<'l, 'input> {
-    source: Source<'l, 'input>,
+struct Parser<'t, 'input> {
+    source: Source<'t, 'input>,
     events: Vec<Event>,
 }
 
@@ -32,8 +32,8 @@ pub fn parse(input: &str) -> Parse {
     }
 }
 
-impl<'l, 'input> Parser<'l, 'input> {
-    fn new(tokens: &'l [Token<'input>]) -> Self {
+impl<'t, 'input> Parser<'t, 'input> {
+    fn new(tokens: &'t [Token<'input>]) -> Self {
         Self {
             source: Source::new(tokens),
             events: Vec::new(),

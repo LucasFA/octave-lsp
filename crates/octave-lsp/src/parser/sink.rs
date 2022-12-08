@@ -5,15 +5,15 @@ use rowan::{GreenNode, GreenNodeBuilder, Language};
 use smol_str::SmolStr;
 use std::mem;
 
-pub(super) struct Sink<'l, 'input> {
+pub(super) struct Sink<'t, 'input> {
     builder: GreenNodeBuilder<'static>,
-    tokens: &'l [Token<'input>],
+    tokens: &'t [Token<'input>],
     cursor: usize,
     events: Vec<Event>,
 }
 
-impl<'l, 'input> Sink<'l, 'input> {
-    pub(super) fn new(tokens: &'l [Token<'input>], events: Vec<Event>) -> Self {
+impl<'t, 'input> Sink<'t, 'input> {
+    pub(super) fn new(tokens: &'t [Token<'input>], events: Vec<Event>) -> Self {
         Self {
             builder: GreenNodeBuilder::new(),
             tokens,
