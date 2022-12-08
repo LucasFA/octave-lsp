@@ -1,8 +1,7 @@
 use super::event::Event;
-use crate::lexer::{SyntaxKind, Token};
+use crate::lexer::Token;
 use crate::syntax::OctaveLanguage;
 use rowan::{GreenNode, GreenNodeBuilder, Language};
-use smol_str::SmolStr;
 use std::mem;
 
 pub(super) struct Sink<'t, 'input> {
@@ -57,7 +56,7 @@ impl<'t, 'input> Sink<'t, 'input> {
                         self.builder.start_node(OctaveLanguage::kind_to_raw(kind));
                     }
                 }
-                Event::AddToken { kind, text } => self.token(kind, text),
+                Event::AddToken => self.token(),
                 Event::FinishNode => self.builder.finish_node(),
                 Event::Placeholder => {}
             }
@@ -74,13 +73,14 @@ impl<'t, 'input> Sink<'t, 'input> {
                 break;
             }
 
-            self.token(token.kind, token.text.into());
+            self.token();
         }
     }
 
-    fn token(&mut self, kind: SyntaxKind, text: SmolStr) {
+    fn token(&mut self) {
+        let Token { kind, text } = self.tokens[self.cursor];
         self.builder
-            .token(OctaveLanguage::kind_to_raw(kind), text.as_str());
+            .token(OctaveLanguage::kind_to_raw(kind), text.into());
         self.cursor += 1;
     }
 }
