@@ -4,6 +4,7 @@ use crate::syntax::OctaveLanguage;
 use rowan::{GreenNode, GreenNodeBuilder, Language};
 use smol_str::SmolStr;
 use std::mem;
+
 pub(super) struct Sink<'l, 'input> {
     builder: GreenNodeBuilder<'static>,
     lexemes: &'l [Lexeme<'input>],
@@ -66,8 +67,8 @@ impl<'l, 'input> Sink<'l, 'input> {
 
         self.builder.finish()
     }
-    
-     fn eat_trivia(&mut self) {
+
+    fn eat_trivia(&mut self) {
         while let Some(lexeme) = self.lexemes.get(self.cursor) {
             if !lexeme.kind.is_trivia() {
                 break;
@@ -76,10 +77,10 @@ impl<'l, 'input> Sink<'l, 'input> {
             self.token(lexeme.kind, lexeme.text.into());
         }
     }
-    
+
     fn token(&mut self, kind: SyntaxKind, text: SmolStr) {
-        self.builder.token(OctaveLanguage::kind_to_raw(kind), text.as_str());
+        self.builder
+            .token(OctaveLanguage::kind_to_raw(kind), text.as_str());
         self.cursor += 1;
     }
-
 }

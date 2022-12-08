@@ -6,7 +6,6 @@ pub(super) struct Source<'l, 'input> {
     cursor: usize,
 }
 
-
 impl<'l, 'input> Source<'l, 'input> {
     pub(super) fn new(lexemes: &'l [Lexeme<'input>]) -> Self {
         Self { lexemes, cursor: 0 }

@@ -1,5 +1,5 @@
 //! This module contains the lexer for Octave.
-//! 
+//!
 //! The lexer is implemented using the [logos](https://crates.io/crates/logos) crate.
 //! In general terms, the lexer takes a string as input and produces a stream of tokens as output.
 //! Those tokens are represented by the Lexeme struct, which holds the kind of the token and the text that it holds.
