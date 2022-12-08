@@ -1,18 +1,18 @@
-use syntax::SyntaxKind;
 use lexer::Token;
+use syntax::SyntaxKind;
 
 /// A wrapper around a list of tokens that provides a cursor and some convenience methods.
-pub(super) struct Source<'t, 'input> {
+pub(crate) struct Source<'t, 'input> {
     tokens: &'t [Token<'input>],
     cursor: usize,
 }
 
 impl<'t, 'input> Source<'t, 'input> {
-    pub(super) fn new(tokens: &'t [Token<'input>]) -> Self {
+    pub(crate) fn new(tokens: &'t [Token<'input>]) -> Self {
         Self { tokens, cursor: 0 }
     }
 
-    pub(super) fn next_token(&mut self) -> Option<&'t Token<'input>> {
+    pub(crate) fn next_token(&mut self) -> Option<&'t Token<'input>> {
         self.eat_trivia();
 
         let token = self.tokens.get(self.cursor)?;
@@ -31,7 +31,7 @@ impl<'t, 'input> Source<'t, 'input> {
         self.peek_kind_raw().map_or(false, SyntaxKind::is_trivia)
     }
 
-    pub(super) fn peek_kind(&mut self) -> Option<SyntaxKind> {
+    pub(crate) fn peek_kind(&mut self) -> Option<SyntaxKind> {
         self.eat_trivia();
         self.peek_kind_raw()
     }

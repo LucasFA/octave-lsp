@@ -1,10 +1,10 @@
 use super::event::Event;
-use syntax::{OctaveLanguage, SyntaxKind};
 use lexer::Token;
 use rowan::{GreenNode, GreenNodeBuilder, Language};
 use std::mem;
+use syntax::{OctaveLanguage, SyntaxKind};
 
-pub(super) struct Sink<'t, 'input> {
+pub(crate) struct Sink<'t, 'input> {
     builder: GreenNodeBuilder<'static>,
     tokens: &'t [Token<'input>],
     cursor: usize,
@@ -12,7 +12,7 @@ pub(super) struct Sink<'t, 'input> {
 }
 
 impl<'t, 'input> Sink<'t, 'input> {
-    pub(super) fn new(tokens: &'t [Token<'input>], events: Vec<Event>) -> Self {
+    pub(crate) fn new(tokens: &'t [Token<'input>], events: Vec<Event>) -> Self {
         Self {
             builder: GreenNodeBuilder::new(),
             tokens,
@@ -21,7 +21,7 @@ impl<'t, 'input> Sink<'t, 'input> {
         }
     }
 
-    pub(super) fn finish(mut self) -> GreenNode {
+    pub(crate) fn finish(mut self) -> GreenNode {
         for idx in 0..self.events.len() {
             match mem::replace(&mut self.events[idx], Event::Placeholder) {
                 Event::StartNode {

@@ -1,8 +1,10 @@
 ///a Parsing of expressions.
 ///a This module contains the code for parsing __expressions__.
-use super::marker::CompletedMarker;
-use super::Parser;
+use crate::parser::marker::CompletedMarker;
+use crate::parser::Parser;
 use syntax::SyntaxKind;
+use super::*;
+
 
 enum BinaryOp {
     Add,
@@ -124,7 +126,7 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) {
 
 #[cfg(test)]
 mod tests {
-    use super::super::check;
+    use crate::check;
     use expect_test::expect;
 
     #[test]
