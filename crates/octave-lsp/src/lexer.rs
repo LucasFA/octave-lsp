@@ -19,7 +19,7 @@ pub(crate) enum SyntaxKind {
     Root,
 
     Literal,
-    BinaryExpr,
+    InfixExpr,
     ParenExpr,
     PrefixExpr,
     VariableRef,
