@@ -9,7 +9,6 @@ pub use token_kind::TokenKind;
 
 use logos::Logos;
 
-/// Logos wrapper.
 pub struct Lexer<'a> {
     inner: logos::Lexer<'a, TokenKind>,
 }

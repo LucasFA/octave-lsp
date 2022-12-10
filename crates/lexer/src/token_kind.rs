@@ -16,26 +16,76 @@ pub enum TokenKind {
     #[regex("[#%].*")]
     Comment,
 
-    #[regex("[ \n\r\t]+")]
+    #[token(";")]
+    Semicolon,
+
+    #[token("\n")]
+    Newline,
+
+    #[regex("[ \r\t]+")]
     Whitespace,
 
+    // Refer to https://docs.octave.org/v7.3.0/Keywords.html
+    // for a list of reserved keywords
     #[token("function")]
     FnKw,
     #[token("endfunction")]
     EndFnKw,
-
+    #[token("if")]
+    IfKw,
+    #[token("elseif")]
+    ElseIfKw,
+    #[token("else")]
+    ElseKw,
+    #[token("endif")]
+    EndIfKw,
+    #[token("switch")]
+    SwitchKw,
+    #[token("case")]
+    CaseKw,
+    #[token("otherwise")]
+    OtherwiseKw,
+    #[token("endswitch")]
+    EndSwitchKw,
+    #[token("while")]
+    WhileKw,
+    #[token("endwhile")]
+    EndWhileKw,
+    #[token("do")]
+    DoKw,
+    #[token("until")]
+    UntilKw,
+    #[token("for")]
+    ForKw,
+    #[token("endfor")]
+    EndForKw,
+    #[token("break")]
+    BreakKw,
+    #[token("continue")]
+    ContinueKw,
+    #[token("unwind_protect")]
+    UnwindProtectKw,
+    #[token("unwind_protect_cleanup")]
+    UnwindProtectCleanupKw,
+    #[token("end_unwind_protect")]
+    EndUnwindProtectKw,
+    #[token("try")]
+    TryKw,
+    #[token("catch")]
+    CatchKw,
+    #[token("end_try_catch")]
+    EndTryKw,
+    #[token("end")]
+    EndKw,
+    // If changing keywords, check that the the function `is_keyword_statement` still makes sense
     #[token("+")]
     Plus,
-
     #[token("-")]
     Minus,
-
     #[token("*")]
     Asterisk,
-
     #[token("/")]
     Slash,
-
     #[token("=")]
     Equals,
 
@@ -82,16 +132,6 @@ mod tests {
     #[test]
     fn lex_spaces() {
         check("   ", TokenKind::Whitespace);
-    }
-
-    #[test]
-    fn lex_fn_keyword() {
-        check("function", TokenKind::FnKw);
-    }
-
-    #[test]
-    fn lex_endfn_keyword() {
-        check("endfunction", TokenKind::EndFnKw);
     }
 
     #[test]
@@ -182,8 +222,8 @@ mod tests {
     }
 
     #[test]
-    fn lex_spaces_and_newlines() {
-        check("  \n ", TokenKind::Whitespace);
+    fn lex_newlines() {
+        check("\n", TokenKind::Newline);
     }
 
     #[test]
@@ -194,5 +234,121 @@ mod tests {
     #[test]
     fn lex_comment_percent() {
         check("% foo", TokenKind::Comment);
+    }
+
+    // TEST KEYWORDS
+
+    #[test]
+    fn lex_fn_keyword() {
+        check("function", TokenKind::FnKw);
+    }
+
+    #[test]
+    fn lex_endfn_keyword() {
+        check("endfunction", TokenKind::EndFnKw);
+    }
+
+    #[test]
+    fn lex_kw_if() {
+        check("if", TokenKind::IfKw)
+    }
+
+    #[test]
+    fn lex_kw_elseif() {
+        check("elseif", TokenKind::ElseIfKw)
+    }
+
+    #[test]
+    fn lex_kw_else() {
+        check("else", TokenKind::ElseKw)
+    }
+
+    #[test]
+    fn lex_kw_endif() {
+        check("endif", TokenKind::EndIfKw)
+    }
+    #[test]
+    fn lex_kw_switchkw() {
+        check("switch", TokenKind::SwitchKw)
+    }
+    #[test]
+    fn lex_kw_casekw() {
+        check("case", TokenKind::CaseKw)
+    }
+    #[test]
+    fn lex_kw_otherwisekw() {
+        check("otherwise", TokenKind::OtherwiseKw)
+    }
+    #[test]
+    fn lex_kw_endswitch() {
+        check("endswitch", TokenKind::EndSwitchKw)
+    }
+    #[test]
+    fn lex_kw_whilekw() {
+        check("while", TokenKind::WhileKw)
+    }
+    #[test]
+    fn lex_kw_endwhilekw() {
+        check("endwhile", TokenKind::EndWhileKw)
+    }
+    #[test]
+    fn lex_kw_dokw() {
+        check("do", TokenKind::DoKw)
+    }
+    #[test]
+    fn lex_kw_untilkw() {
+        check("until", TokenKind::UntilKw)
+    }
+    #[test]
+    fn lex_kw_forkw() {
+        check("for", TokenKind::ForKw)
+    }
+    #[test]
+    fn lex_kw_endforkw() {
+        check("endfor", TokenKind::EndForKw)
+    }
+    #[test]
+    fn lex_kw_breakkw() {
+        check("break", TokenKind::BreakKw)
+    }
+
+    #[test]
+    fn lex_kw_continuekw() {
+        check("continue", TokenKind::ContinueKw)
+    }
+
+    #[test]
+    fn lex_kw_unwindprotectkw() {
+        check("unwind_protect", TokenKind::UnwindProtectKw)
+    }
+
+    #[test]
+    fn lex_kw_unwindprotectcleanupkw() {
+        check("unwind_protect_cleanup", TokenKind::UnwindProtectCleanupKw)
+    }
+
+    #[test]
+    fn lex_kw_endunwindprotectkw() {
+        check("end_unwind_protect", TokenKind::EndUnwindProtectKw)
+    }
+
+    #[test]
+    fn lex_kw_trykw() {
+        check("try", TokenKind::TryKw)
+    }
+
+    #[test]
+    fn lex_kw_catchkw() {
+        check("catch", TokenKind::CatchKw)
+    }
+
+    #[test]
+    fn lex_kw_endtrykw() {
+        check("end_try_catch", TokenKind::EndTryKw)
+    }
+
+    #[test]
+    fn lex_kw_endkw() {
+        check("end", TokenKind::EndKw)
     }
 }
