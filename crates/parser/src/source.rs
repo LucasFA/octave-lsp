@@ -2,6 +2,7 @@ use lexer::Token;
 use syntax::SyntaxKind;
 
 /// A wrapper around a list of tokens that provides a cursor and some convenience methods.
+//TODO: turn this all into an iterator? Would reduce dependence on bound checks and other error checking
 pub(crate) struct Source<'t, 'input> {
     tokens: &'t [Token<'input>],
     cursor: usize,
