@@ -25,10 +25,10 @@ pub type SyntaxNode = rowan::SyntaxNode<OctaveLanguage>;
     Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, FromPrimitive, ToPrimitive, EnumIter,
 )]
 pub enum SyntaxKind {
-    Whitespace,
-
-    Newline,
+    Comment,
     Semicolon,
+    Newline,
+    Whitespace,
 
     // Statement Keywords
     FnKw,
@@ -57,21 +57,42 @@ pub enum SyntaxKind {
     EndTryKw,
     EndKw,
 
-    Identifier,
-    Number,
+    // Operators
     Plus,
     Minus,
     Asterisk,
+    ElmtMult,
     Slash,
+    ElmtDiv,
+    Caret,
+    ElmtPow,
+    Transpose,
+    ElmtTranspose,
+    Not,
+    And,
+    Or,
+    EqualsEquals,
+    NotEquals,
+    LessThan,
+    GreaterThan,
+    LessThanEquals,
+    GreaterThanEquals,
     Equals,
-    LParen,
-    RParen,
-    LBracket,
-    RBracket,
+    Colon,
+
     LBrace,
     RBrace,
-    Comment,
+    LBracket,
+    RBracket,
+    LParen,
+    RParen,
+
+    Identifier,
+    Number,
+
     Error,
+
+    // Syntax-level nodes
     Root,
     InfixExpr,
     Literal,
@@ -127,11 +148,29 @@ impl From<TokenKind> for SyntaxKind {
 
             TokenKind::Identifier => Self::Identifier,
             TokenKind::Number => Self::Number,
+
             TokenKind::Plus => Self::Plus,
             TokenKind::Minus => Self::Minus,
             TokenKind::Asterisk => Self::Asterisk,
+            TokenKind::ElmtMult => Self::ElmtMult,
             TokenKind::Slash => Self::Slash,
+            TokenKind::ElmtDiv => Self::ElmtDiv,
+            TokenKind::Caret => Self::Caret,
+            TokenKind::ElmtPow => Self::ElmtPow,
+            TokenKind::Transpose => Self::Transpose,
+            TokenKind::ElmtTranspose => Self::ElmtTranspose,
+            TokenKind::Not => Self::Not,
+            TokenKind::And => Self::And,
+            TokenKind::Or => Self::Or,
+            TokenKind::EqualsEquals => Self::EqualsEquals,
+            TokenKind::NotEquals => Self::NotEquals,
+            TokenKind::LessThan => Self::LessThan,
+            TokenKind::GreaterThan => Self::GreaterThan,
+            TokenKind::LessThanEquals => Self::LessThanEquals,
+            TokenKind::GreaterThanEquals => Self::GreaterThanEquals,
             TokenKind::Equals => Self::Equals,
+            TokenKind::Colon => Self::Colon,
+
             TokenKind::LParen => Self::LParen,
             TokenKind::RParen => Self::RParen,
             TokenKind::LBracket => Self::LBracket,
@@ -151,7 +190,7 @@ mod test {
     use crate::SyntaxKind::*;
 
     // Test with full coverage. An error here would be hard to debug
-    fn to_kw_or_not_to_kw() -> ([SyntaxKind; 25], [SyntaxKind; 25]) {
+    fn to_kw_or_not_to_kw() -> ([SyntaxKind; 25], [SyntaxKind; 41]) {
         let keywords = [
             FnKw,
             EndFnKw,
@@ -189,8 +228,24 @@ mod test {
             Plus,
             Minus,
             Asterisk,
+            ElmtMult,
             Slash,
+            ElmtDiv,
+            Caret,
+            ElmtPow,
+            Transpose,
+            ElmtTranspose,
+            Not,
+            And,
+            Or,
+            EqualsEquals,
+            NotEquals,
+            LessThan,
+            GreaterThan,
+            LessThanEquals,
+            GreaterThanEquals,
             Equals,
+            Colon,
             LParen,
             RParen,
             LBracket,

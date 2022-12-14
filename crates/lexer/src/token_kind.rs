@@ -77,17 +77,51 @@ pub enum TokenKind {
     EndTryKw,
     #[token("end")]
     EndKw,
-    // If changing keywords, check that the the function `is_keyword_statement` still makes sense
+
+    // Operators
     #[token("+")]
     Plus,
     #[token("-")]
     Minus,
     #[token("*")]
     Asterisk,
+    #[token(".*")]
+    ElmtMult,
     #[token("/")]
     Slash,
+    #[token("./")]
+    ElmtDiv,
+    #[token("^")]
+    Caret,
+    #[token(".^")]
+    ElmtPow,
+    #[token("'")]
+    Transpose,
+    #[token(".'")]
+    ElmtTranspose,
+    #[token("!")]
+    Not,
+    #[token("&&")]
+    And,
+    #[token("||")]
+    Or,
+    #[token("==")]
+    EqualsEquals,
+    #[token("!=")]
+    NotEquals,
+    #[token("<")]
+    LessThan,
+    #[token(">")]
+    GreaterThan,
+    #[token("<=")]
+    LessThanEquals,
+    #[token(">=")]
+    GreaterThanEquals,
     #[token("=")]
     Equals,
+
+    #[token(":")]
+    Colon,
 
     #[token("{")]
     LBrace,
