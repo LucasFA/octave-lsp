@@ -91,6 +91,10 @@ pub enum TokenKind {
     Slash,
     #[token("./")]
     ElmtDiv,
+    #[token(r"\")]
+    LeftDiv,
+    #[token(r".\")]
+    ElmtLeftDiv,
     #[token("^")]
     Caret,
     #[token(".^")]
