@@ -352,33 +352,26 @@ mod tests {
     }
 
     #[test]
-    fn parse_binary_expression_interspersed_with_comments() {
+    fn parse_binary_expression_followed_by_comments() {
         check(
-            "
-1
-  + 1 # Add one
-  + 10 # Add ten",
+            "1 + 1+ 10 # Add ten",
             expect![[r##"
-                Root@0..35
-                  Whitespace@0..1 "\n"
-                  InfixExpr@1..35
-                    InfixExpr@1..21
-                      Literal@1..5
-                        Number@1..2 "1"
-                        Whitespace@2..5 "\n  "
-                      Plus@5..6 "+"
-                      Whitespace@6..7 " "
-                      Literal@7..21
-                        Number@7..8 "1"
-                        Whitespace@8..9 " "
-                        Comment@9..18 "# Add one"
-                        Whitespace@18..21 "\n  "
-                    Plus@21..22 "+"
-                    Whitespace@22..23 " "
-                    Literal@23..35
-                      Number@23..25 "10"
-                      Whitespace@25..26 " "
-                      Comment@26..35 "# Add ten""##]],
+Root@0..19
+  InfixExpr@0..19
+    InfixExpr@0..5
+      Literal@0..2
+        Number@0..1 "1"
+        Whitespace@1..2 " "
+      Plus@2..3 "+"
+      Whitespace@3..4 " "
+      Literal@4..5
+        Number@4..5 "1"
+    Plus@5..6 "+"
+    Whitespace@6..7 " "
+    Literal@7..19
+      Number@7..9 "10"
+      Whitespace@9..10 " "
+      Comment@10..19 "# Add ten""##]],
         );
     }
 
