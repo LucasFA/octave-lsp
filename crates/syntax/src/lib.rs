@@ -194,7 +194,7 @@ mod test {
     use crate::SyntaxKind::*;
 
     // Test with full coverage. An error here would be hard to debug
-    fn to_kw_or_not_to_kw() -> ([SyntaxKind; 25], [SyntaxKind; 41]) {
+    fn to_kw_or_not_to_kw() -> ([SyntaxKind; 25], [SyntaxKind; 43]) {
         let keywords = [
             FnKw,
             EndFnKw,
@@ -235,6 +235,8 @@ mod test {
             ElmtMult,
             Slash,
             ElmtDiv,
+            LeftDiv,
+            ElmtLeftDiv,
             Caret,
             ElmtPow,
             Transpose,
