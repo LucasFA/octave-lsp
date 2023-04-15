@@ -2,12 +2,12 @@ use super::*;
 
 pub(super) fn stmt(p: &mut Parser) -> Option<CompletedMarker> {
     match p.peek() {
-        Some(SyntaxKind::Identifier) => variable_def(p),
+        Some(SyntaxKind::Identifier) => handle_variable(p),
         _ => expr::expr(p),
     }
 }
 
-fn variable_def(p: &mut Parser) -> Option<CompletedMarker> {
+fn handle_variable(p: &mut Parser) -> Option<CompletedMarker> {
     assert!(p.at(SyntaxKind::Identifier));
     let lhs = p.start();
     p.bump();
@@ -19,17 +19,17 @@ fn variable_def(p: &mut Parser) -> Option<CompletedMarker> {
             Some(lhs.complete(p, SyntaxKind::VariableDef))
         }
         Some(_) => {
-            let mut lhs = lhs.complete(p, SyntaxKind::VariableRef);
+            let lhs = lhs.complete(p, SyntaxKind::VariableRef);
             let m = lhs.precede(p);
             // get what it is and then
             p.bump();
             expr::expr(p)?;
-            lhs = m.complete(p, SyntaxKind::InfixExpr);
-            Some(lhs)
+            let m = m.complete(p, SyntaxKind::InfixExpr);
+            Some(m)
         }
         None => {
-            let m = lhs.complete(p, SyntaxKind::VariableRef);
-            Some(m)
+            let lhs = lhs.complete(p, SyntaxKind::VariableRef);
+            Some(lhs)
         }
     }
 }
