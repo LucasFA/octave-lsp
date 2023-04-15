@@ -6,6 +6,8 @@ use crate::source::Source;
 use marker::Marker;
 use syntax::SyntaxKind;
 
+const RECOVERY_SET: [SyntaxKind; 1] = [SyntaxKind::Semicolon];
+
 pub(crate) struct Parser<'t, 'input> {
     source: Source<'t, 'input>,
     events: Vec<Event>,
@@ -42,6 +44,23 @@ impl<'t, 'input> Parser<'t, 'input> {
     pub(crate) fn bump(&mut self) {
         self.source.next_token().unwrap();
         self.events.push(Event::AddToken);
+    }
+
+    pub(crate) fn error(&mut self) {
+        if !self.at_set(&RECOVERY_SET) && !self.at_end() {
+            let m = self.start();
+            self.bump();
+            m.complete(self, SyntaxKind::Error);
+        }
+    }
+
+    fn at_set(&mut self, set: &[SyntaxKind]) -> bool {
+        self.peek().map_or(false, |k| set.contains(&k))
+    }
+
+    pub(crate) fn at_end(&mut self) -> bool {
+        println!("Are we at the end?");
+        self.peek().is_none()
     }
 }
 

@@ -2,25 +2,36 @@ use super::*;
 
 pub(super) fn stmt(p: &mut Parser) -> Option<CompletedMarker> {
     match p.peek() {
-        Some(SyntaxKind::Identifier) => variable_def(p).or_else(|| expr::expr(p)),
+        Some(SyntaxKind::Identifier) => variable_def(p),
         _ => expr::expr(p),
     }
 }
 
 fn variable_def(p: &mut Parser) -> Option<CompletedMarker> {
     assert!(p.at(SyntaxKind::Identifier));
-    let m = p.start();
+    let lhs = p.start();
     p.bump();
 
-    if !p.at(SyntaxKind::Equals) {
-        return Some(m.complete(p, SyntaxKind::VariableRef));
+    match p.peek() {
+        Some(SyntaxKind::Equals) => {
+            p.bump();
+            expr::expr(p)?;
+            Some(lhs.complete(p, SyntaxKind::VariableDef))
+        }
+        Some(_) => {
+            let mut lhs = lhs.complete(p, SyntaxKind::VariableRef);
+            let m = lhs.precede(p);
+            // get what it is and then
+            p.bump();
+            expr::expr(p)?;
+            lhs = m.complete(p, SyntaxKind::InfixExpr);
+            Some(lhs)
+        }
+        None => {
+            let m = lhs.complete(p, SyntaxKind::VariableRef);
+            Some(m)
+        }
     }
-
-    p.bump();
-
-    expr::expr(p)?;
-
-    Some(m.complete(p, SyntaxKind::VariableDef))
 }
 
 #[cfg(test)]
@@ -79,6 +90,21 @@ Root@0..3
     Plus@1..2 "+"
     VariableRef@2..3
       Identifier@2..3 "a""#]],
+        )
+    }
+
+    #[test]
+    fn parse_expression_with_variable_reference2() {
+        check(
+            "a+1",
+            expect![[r#"
+  Root@0..3
+    InfixExpr@0..3
+      VariableRef@0..1
+        Identifier@0..1 "a"
+      Plus@1..2 "+"
+      Literal@2..3
+        Number@2..3 "1""#]],
         )
     }
 }
