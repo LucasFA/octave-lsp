@@ -107,4 +107,23 @@ Root@0..3
         Number@2..3 "1""#]],
         )
     }
+
+    #[test]
+    fn parse_multiple_statements() {
+        check(
+            "a = 1\na",
+            expect![[r#"
+Root@0..7
+  VariableDef@0..6
+    Identifier@0..1 "a"
+    Whitespace@1..2 " "
+    Equals@2..3 "="
+    Whitespace@3..4 " "
+    Literal@4..6
+      Number@4..5 "1"
+      Newline@5..6 "\n"
+  VariableRef@6..7
+    Identifier@6..7 "a""#]],
+        );
+    }
 }
