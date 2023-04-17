@@ -58,6 +58,92 @@ Root@0..9
     }
 
     #[test]
+    fn parse_with_semicolon() {
+        check(
+            "a = 43;",
+            expect![[r#"
+            Root@0..7
+              VariableDef@0..7
+                Identifier@0..1 "a"
+                Whitespace@1..2 " "
+                Equals@2..3 "="
+                Whitespace@3..4 " "
+                Literal@4..6
+                  Number@4..6 "43"
+                Semicolon@6..7 ";""#]],
+        )
+    }
+
+    #[test]
+    fn parse_multiple_statements_with_semicolon() {
+        check(
+            "a = 43; 7",
+            expect![[r#"
+            Root@0..9
+              VariableDef@0..8
+                Identifier@0..1 "a"
+                Whitespace@1..2 " "
+                Equals@2..3 "="
+                Whitespace@3..4 " "
+                Literal@4..6
+                  Number@4..6 "43"
+                Semicolon@6..7 ";"
+                Whitespace@7..8 " "
+              Literal@8..9
+                Number@8..9 "7""#]],
+        )
+    }
+
+    #[test]
+    fn recover_on_semicolon_broken_expression() {
+        check(
+            "a = 43 + ;",
+            expect![[r#"
+            Root@0..10
+              VariableDef@0..10
+                Identifier@0..1 "a"
+                Whitespace@1..2 " "
+                Equals@2..3 "="
+                Whitespace@3..4 " "
+                InfixExpr@4..10
+                  Literal@4..7
+                    Number@4..6 "43"
+                    Whitespace@6..7 " "
+                  Plus@7..8 "+"
+                  Whitespace@8..9 " "
+                  Semicolon@9..10 ";""#]],
+        )
+    }
+
+    #[test]
+    fn recover_on_semicolon_broken_expression_with_continuation() {
+        check(
+            "a = 43 + ;b = a",
+            expect![[r#"
+            Root@0..15
+              VariableDef@0..10
+                Identifier@0..1 "a"
+                Whitespace@1..2 " "
+                Equals@2..3 "="
+                Whitespace@3..4 " "
+                InfixExpr@4..10
+                  Literal@4..7
+                    Number@4..6 "43"
+                    Whitespace@6..7 " "
+                  Plus@7..8 "+"
+                  Whitespace@8..9 " "
+                  Semicolon@9..10 ";"
+              VariableDef@10..15
+                Identifier@10..11 "b"
+                Whitespace@11..12 " "
+                Equals@12..13 "="
+                Whitespace@13..14 " "
+                VariableRef@14..15
+                  Identifier@14..15 "a""#]],
+        )
+    }
+
+    #[test]
     fn recover_on_semicolon() {
         check(
             "a = ;\nb = a",
