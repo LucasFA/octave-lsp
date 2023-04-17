@@ -46,6 +46,14 @@ impl<'t, 'input> Parser<'t, 'input> {
         self.events.push(Event::AddToken);
     }
 
+    pub(crate) fn expect(&mut self, kind: SyntaxKind) {
+        if self.at(kind) {
+            self.bump();
+        } else {
+            self.error();
+        }
+    }
+
     pub(crate) fn error(&mut self) {
         if !self.at_set(&RECOVERY_SET) && !self.at_end() {
             let m = self.start();

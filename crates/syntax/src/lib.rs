@@ -106,7 +106,7 @@ pub enum SyntaxKind {
 
 impl SyntaxKind {
     pub fn is_trivia(self) -> bool {
-        matches!(self, Self::Whitespace | Self::Comment)
+        matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
     }
 
     pub fn is_keyword_statement(&self) -> bool {
