@@ -19,21 +19,17 @@ fn handle_variable(p: &mut Parser) -> CompletedMarker {
         return lhs.complete(p, SyntaxKind::VariableDef);
     }
 
-    match p.peek() {
-        Some(_) => {
-            let lhs = lhs.complete(p, SyntaxKind::VariableRef);
-            let m = lhs.precede(p);
-            // get what it is and then
-            p.bump();
-            expr::expr(p);
-            let m = m.complete(p, SyntaxKind::InfixExpr);
-            m
-        }
-        None => {
-            let lhs = lhs.complete(p, SyntaxKind::VariableRef);
-            lhs
-        }
+    if p.at_end() {
+        return lhs.complete(p, SyntaxKind::VariableRef);
     }
+
+    let lhs = lhs.complete(p, SyntaxKind::VariableRef);
+    let m = lhs.precede(p);
+    // get what it is and then
+    p.bump();
+    expr::expr(p);
+    let m = m.complete(p, SyntaxKind::InfixExpr);
+    m
 }
 
 #[cfg(test)]
