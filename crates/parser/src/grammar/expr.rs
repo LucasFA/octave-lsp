@@ -91,6 +91,7 @@ fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
     } else if p.at(SyntaxKind::LParen) {
         paren_expr(p)
     } else if p.at(SyntaxKind::Semicolon) {
+        // Finished expression succesfully
         p.bump();
         return None;
     } else {
@@ -113,6 +114,10 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) -> Option<Compl
             BinaryOp::Mul
         } else if p.at(SyntaxKind::Slash) {
             BinaryOp::Div
+        } else if p.at(SyntaxKind::Semicolon) {
+            // Finished expression unsuccesfully
+            p.bump();
+            break;
         } else {
             // We’re not at an operator; we don’t know what to do next, so we return and let the
             // caller decide.
