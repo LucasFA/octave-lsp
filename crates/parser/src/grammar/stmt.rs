@@ -214,4 +214,27 @@ Root@0..7
     Identifier@6..7 "a""#]],
         );
     }
+
+    #[test]
+    fn parse_long_expression() {
+        check(
+            "a + b + 1",
+            expect![[r#"
+Root@0..9
+  InfixExpr@0..9
+    VariableRef@0..2
+      Identifier@0..1 "a"
+      Whitespace@1..2 " "
+    Plus@2..3 "+"
+    Whitespace@3..4 " "
+    InfixExpr@4..9
+      VariableRef@4..6
+        Identifier@4..5 "b"
+        Whitespace@5..6 " "
+      Plus@6..7 "+"
+      Whitespace@7..8 " "
+      Literal@8..9
+        Number@8..9 "1""#]],
+        )
+    }
 }
