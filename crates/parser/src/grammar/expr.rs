@@ -378,6 +378,19 @@ Root@0..19
         );
     }
 
+    #[test]
+    fn parse_unclosed_parentheses() {
+        check(
+            "(foo",
+            expect![[r#"
+Root@0..4
+  ParenExpr@0..4
+    LParen@0..1 "("
+    VariableRef@1..4
+      Identifier@1..4 "foo""#]],
+        );
+    }
+
     //     #[test]
     //     fn parse_whitespace_and_identifier() {
     //         check(

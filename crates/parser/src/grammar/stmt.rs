@@ -61,20 +61,20 @@ Root@0..9
             "a = ;\nb = a",
             expect![[r#"
 Root@0..11
-  VariableDef@0..8
-    Ident@0..1 "a"
+  VariableDef@0..6
+    Identifier@0..1 "a"
     Whitespace@1..2 " "
     Equals@2..3 "="
     Whitespace@3..4 " "
     Semicolon@4..5 ";"
-    Whitespace@5..6 "\n"
-  VariableDef@6..17
-    Ident@6..7 "b"
+    Newline@5..6 "\n"
+  VariableDef@6..11
+    Identifier@6..7 "b"
     Whitespace@7..8 " "
     Equals@8..9 "="
     Whitespace@9..10 " "
     VariableRef@10..11
-      Ident@10..11 "a""#]],
+      Identifier@10..11 "a""#]],
         );
     }
 
