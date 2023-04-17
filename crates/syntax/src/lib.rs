@@ -291,7 +291,7 @@ mod test {
     fn check_trivias() {
         use strum::IntoEnumIterator;
         for val in SyntaxKind::iter() {
-            check_trivia(val, [Whitespace, Comment].contains(&val));
+            check_trivia(val, [Whitespace, Newline, Comment].contains(&val));
         }
     }
 

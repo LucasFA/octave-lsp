@@ -6,11 +6,12 @@ use crate::source::Source;
 use marker::Marker;
 use syntax::SyntaxKind;
 
-const RECOVERY_SET: [SyntaxKind; 1] = [SyntaxKind::Semicolon];
+const RECOVERY_SET: [SyntaxKind; 0] = [];
 
 pub(crate) struct Parser<'t, 'input> {
     source: Source<'t, 'input>,
     events: Vec<Event>,
+    expected_kinds: Vec<SyntaxKind>,
 }
 
 impl<'t, 'input> Parser<'t, 'input> {
@@ -18,6 +19,7 @@ impl<'t, 'input> Parser<'t, 'input> {
         Self {
             source,
             events: Vec::new(),
+            expected_kinds: Vec::new(),
         }
     }
 
@@ -34,6 +36,7 @@ impl<'t, 'input> Parser<'t, 'input> {
     }
 
     pub(crate) fn at(&mut self, kind: SyntaxKind) -> bool {
+        self.expected_kinds.push(kind);
         self.peek() == Some(kind)
     }
 
@@ -42,6 +45,7 @@ impl<'t, 'input> Parser<'t, 'input> {
     }
 
     pub(crate) fn bump(&mut self) {
+        self.expected_kinds.clear();
         self.source.next_token().unwrap();
         self.events.push(Event::AddToken);
     }
@@ -67,7 +71,6 @@ impl<'t, 'input> Parser<'t, 'input> {
     }
 
     pub(crate) fn at_end(&mut self) -> bool {
-        println!("Are we at the end?");
         self.peek().is_none()
     }
 }

@@ -1,35 +1,37 @@
 use super::*;
 
 pub(super) fn stmt(p: &mut Parser) -> Option<CompletedMarker> {
-    match p.peek() {
-        Some(SyntaxKind::Identifier) => handle_variable(p),
-        _ => expr::expr(p),
+    if p.at(SyntaxKind::Identifier) {
+        Some(handle_variable(p))
+    } else {
+        expr::expr(p)
     }
 }
 
-fn handle_variable(p: &mut Parser) -> Option<CompletedMarker> {
+fn handle_variable(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(SyntaxKind::Identifier));
     let lhs = p.start();
     p.bump();
 
+    if p.at(SyntaxKind::Equals) {
+        p.bump();
+        expr::expr(p);
+        return lhs.complete(p, SyntaxKind::VariableDef);
+    }
+
     match p.peek() {
-        Some(SyntaxKind::Equals) => {
-            p.bump();
-            expr::expr(p)?;
-            Some(lhs.complete(p, SyntaxKind::VariableDef))
-        }
         Some(_) => {
             let lhs = lhs.complete(p, SyntaxKind::VariableRef);
             let m = lhs.precede(p);
             // get what it is and then
             p.bump();
-            expr::expr(p)?;
+            expr::expr(p);
             let m = m.complete(p, SyntaxKind::InfixExpr);
-            Some(m)
+            m
         }
         None => {
             let lhs = lhs.complete(p, SyntaxKind::VariableRef);
-            Some(lhs)
+            lhs
         }
     }
 }
