@@ -1,4 +1,3 @@
-use smol_str::SmolStr;
 use syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
 #[derive(Debug)]
@@ -97,8 +96,8 @@ impl Literal {
 }
 
 impl VariableRef {
-    pub fn name(&self) -> SmolStr {
-        self.0.first_token().unwrap().text().into()
+    pub fn name(&self) -> Option<SyntaxToken> {
+        self.0.first_token()
     }
 }
 

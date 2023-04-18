@@ -27,7 +27,9 @@ impl Database {
                 ast::Expr::Literal(ast) => Expr::Literal { n: ast.parse() },
                 ast::Expr::ParenExpr(ast) => self.lower_expr(ast.expr()),
                 ast::Expr::UnaryExpr(ast) => self.lower_unary(ast),
-                ast::Expr::VariableRef(ast) => Expr::VariableRef { var: ast.name() },
+                ast::Expr::VariableRef(ast) => Expr::VariableRef {
+                    var: ast.name().unwrap().text().into(),
+                },
             }
         } else {
             Expr::Missing
