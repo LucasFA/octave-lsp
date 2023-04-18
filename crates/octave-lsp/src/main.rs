@@ -33,6 +33,7 @@ fn main() -> io::Result<()> {
             })
             .collect::<Vec<_>>());
 
+        dbg!(hir::lower(root).collect::<Vec<_>>());
         input.clear();
     }
 }
