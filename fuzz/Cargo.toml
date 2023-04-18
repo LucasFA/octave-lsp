@@ -8,8 +8,8 @@ edition = "2021"
 [workspace]
 
 [[bin]]
-name = "parse_lower"
-path = "fuzz_targets/parse_lower.rs"
+name = "main"
+path = "fuzz_targets/main.rs"
 
 [dependencies]
 ast = {path = "../crates/ast"}
@@ -19,3 +19,4 @@ parser = {path = "../crates/parser"}
 
 [package.metadata]
 cargo-fuzz = true
+
