@@ -60,7 +60,7 @@ fn prefix_expr(p: &mut Parser) -> CompletedMarker {
     let op = UnaryOp::Neg;
     let ((), right_binding_power) = op.binding_power();
 
-    // Eat the operator’s token.
+    // Eat the operator's token.
     p.bump();
 
     expr_binding_power(p, right_binding_power);
@@ -90,7 +90,7 @@ fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
         prefix_expr(p)
     } else if p.at(SyntaxKind::LParen) {
         paren_expr(p)
-    } else if p.at(SyntaxKind::Semicolon) {
+    } else if let Some(SyntaxKind::Semicolon) = p.peek() {
         // Finished expression succesfully
         p.bump();
         return None;
@@ -114,12 +114,12 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) -> Option<Compl
             BinaryOp::Mul
         } else if p.at(SyntaxKind::Slash) {
             BinaryOp::Div
-        } else if p.at(SyntaxKind::Semicolon) {
+        } else if let Some(SyntaxKind::Semicolon) = p.peek() {
             // Finished expression unsuccesfully
             p.bump();
             break;
         } else {
-            // We’re not at an operator; we don’t know what to do next, so we return and let the
+            // We're not at an operator; we don't know what to do next, so we return and let the
             // caller decide.
             break;
         };
@@ -132,8 +132,13 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) -> Option<Compl
         p.bump();
 
         let m = lhs.precede(p);
-        expr_binding_power(p, right_binding_power);
+
+        let parsed_rhs = expr_binding_power(p, right_binding_power).is_some();
         lhs = m.complete(p, SyntaxKind::InfixExpr);
+
+        if !parsed_rhs {
+            break;
+        }
     }
 
     Some(lhs)
@@ -402,7 +407,8 @@ Root@0..4
   ParenExpr@0..4
     LParen@0..1 "("
     VariableRef@1..4
-      Identifier@1..4 "foo""#]],
+      Identifier@1..4 "foo"
+error at 1..4: expected '+', '-', '*', '/' or ')'"#]],
         );
     }
 
@@ -417,4 +423,21 @@ Root@0..4
     //   Identifier@3..6 "llo""#]],
     //         );
     //     }
+
+    #[test]
+    fn do_not_parse_operator_if_gettting_rhs_failed() {
+        check(
+            "(1+",
+            expect![[r#"
+Root@0..3
+  ParenExpr@0..3
+    LParen@0..1 "("
+    InfixExpr@1..3
+      Literal@1..2
+        Number@1..2 "1"
+      Plus@2..3 "+"
+error at 2..3: expected number, identifier, '-' or '('
+error at 2..3: expected ')'"#]],
+        );
+    }
 }
