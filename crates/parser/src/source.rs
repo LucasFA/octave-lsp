@@ -1,6 +1,5 @@
-use lexer::Token;
+use lexer::{Token, TokenKind};
 use rowan::TextRange;
-use syntax::SyntaxKind;
 
 /// A wrapper around a list of tokens that provides a cursor and some convenience methods.
 //TODO: turn this all into an iterator? Would reduce dependence on bound checks and other error checking
@@ -35,15 +34,15 @@ impl<'t, 'input> Source<'t, 'input> {
     }
 
     fn at_trivia(&self) -> bool {
-        self.peek_kind_raw().map_or(false, SyntaxKind::is_trivia)
+        self.peek_kind_raw().map_or(false, TokenKind::is_trivia)
     }
 
-    pub(crate) fn peek_kind(&mut self) -> Option<SyntaxKind> {
+    pub(crate) fn peek_kind(&mut self) -> Option<TokenKind> {
         self.eat_trivia();
         self.peek_kind_raw()
     }
 
-    fn peek_kind_raw(&self) -> Option<SyntaxKind> {
+    fn peek_kind_raw(&self) -> Option<TokenKind> {
         self.peek_token_raw()
             .map(|Token { kind, .. }| (*kind).into())
     }

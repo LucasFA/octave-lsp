@@ -2,6 +2,7 @@
 ///a This module contains the code for parsing __expressions__.
 use crate::parser::marker::CompletedMarker;
 use crate::parser::Parser;
+use lexer::TokenKind;
 use syntax::SyntaxKind;
 
 enum BinaryOp {
@@ -38,7 +39,7 @@ pub(super) fn expr(p: &mut Parser) -> Option<CompletedMarker> {
 }
 
 fn literal(p: &mut Parser) -> CompletedMarker {
-    assert!(p.at(SyntaxKind::Number));
+    assert!(p.at(TokenKind::Number));
 
     let m = p.start();
     p.bump();
@@ -46,7 +47,7 @@ fn literal(p: &mut Parser) -> CompletedMarker {
 }
 
 fn variable_ref(p: &mut Parser) -> CompletedMarker {
-    assert!(p.at(SyntaxKind::Identifier));
+    assert!(p.at(TokenKind::Identifier));
 
     let m = p.start();
     p.bump();
@@ -54,7 +55,7 @@ fn variable_ref(p: &mut Parser) -> CompletedMarker {
 }
 
 fn prefix_expr(p: &mut Parser) -> CompletedMarker {
-    assert!(p.at(SyntaxKind::Minus));
+    assert!(p.at(TokenKind::Minus));
 
     let m = p.start();
 
@@ -70,28 +71,28 @@ fn prefix_expr(p: &mut Parser) -> CompletedMarker {
 }
 
 fn paren_expr(p: &mut Parser) -> CompletedMarker {
-    assert!(p.at(SyntaxKind::LParen));
+    assert!(p.at(TokenKind::LParen));
 
     let m = p.start();
 
     p.bump();
     expr_binding_power(p, 0);
 
-    p.expect(SyntaxKind::RParen);
+    p.expect(TokenKind::RParen);
 
     m.complete(p, SyntaxKind::ParenExpr)
 }
 
 fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
-    let cm = if p.at(SyntaxKind::Number) {
+    let cm = if p.at(TokenKind::Number) {
         literal(p)
-    } else if p.at(SyntaxKind::Identifier) {
+    } else if p.at(TokenKind::Identifier) {
         variable_ref(p)
-    } else if p.at(SyntaxKind::Minus) {
+    } else if p.at(TokenKind::Minus) {
         prefix_expr(p)
-    } else if p.at(SyntaxKind::LParen) {
+    } else if p.at(TokenKind::LParen) {
         paren_expr(p)
-    } else if let Some(SyntaxKind::Semicolon) = p.peek() {
+    } else if let Some(TokenKind::Semicolon) = p.peek() {
         // Finished expression succesfully
         p.bump();
         return None;
@@ -107,15 +108,15 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) -> Option<Compl
     let mut lhs = lhs(p)?;
 
     loop {
-        let op = if p.at(SyntaxKind::Plus) {
+        let op = if p.at(TokenKind::Plus) {
             BinaryOp::Add
-        } else if p.at(SyntaxKind::Minus) {
+        } else if p.at(TokenKind::Minus) {
             BinaryOp::Sub
-        } else if p.at(SyntaxKind::Asterisk) {
+        } else if p.at(TokenKind::Asterisk) {
             BinaryOp::Mul
-        } else if p.at(SyntaxKind::Slash) {
+        } else if p.at(TokenKind::Slash) {
             BinaryOp::Div
-        } else if let Some(SyntaxKind::Semicolon) = p.peek() {
+        } else if let Some(TokenKind::Semicolon) = p.peek() {
             // Finished expression unsuccesfully
             p.bump();
             break;

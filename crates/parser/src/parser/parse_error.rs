@@ -1,11 +1,11 @@
+use lexer::TokenKind;
 use std::fmt;
-use syntax::SyntaxKind;
 use text_size::TextRange;
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct ParseError {
-    pub(super) expected: Vec<SyntaxKind>,
-    pub(super) found: Option<SyntaxKind>,
+    pub(super) expected: Vec<TokenKind>,
+    pub(super) found: Option<TokenKind>,
     pub(super) range: TextRange,
 }
 
@@ -47,8 +47,8 @@ mod tests {
     use std::ops::Range as StdRange;
 
     fn check(
-        expected: Vec<SyntaxKind>,
-        found: Option<SyntaxKind>,
+        expected: Vec<TokenKind>,
+        found: Option<TokenKind>,
         range: StdRange<u32>,
         output: expect_test::Expect,
     ) {
@@ -69,8 +69,8 @@ mod tests {
     #[test]
     fn one_expected_did_find() {
         check(
-            vec![SyntaxKind::Equals],
-            Some(SyntaxKind::Identifier),
+            vec![TokenKind::Equals],
+            Some(TokenKind::Identifier),
             10..20,
             expect!["error at 10..20: expected '=', but found identifier"],
         );
@@ -79,7 +79,7 @@ mod tests {
     #[test]
     fn one_expected_did_not_find() {
         check(
-            vec![SyntaxKind::RParen],
+            vec![TokenKind::RParen],
             None,
             5..6,
             expect!["error at 5..6: expected ')'"],
@@ -90,12 +90,12 @@ mod tests {
     fn multiple_expected_did_find() {
         check(
             vec![
-                SyntaxKind::Number,
-                SyntaxKind::Identifier,
-                SyntaxKind::Minus,
-                SyntaxKind::LParen,
+                TokenKind::Number,
+                TokenKind::Identifier,
+                TokenKind::Minus,
+                TokenKind::LParen,
             ],
-            Some(SyntaxKind::Semicolon),
+            Some(TokenKind::Semicolon),
             100..105,
             expect![r#"error at 100..105: expected number, identifier, '-' or '(', but found ';'"#],
         );
@@ -104,8 +104,8 @@ mod tests {
     #[test]
     fn two_expected_did_find() {
         check(
-            vec![SyntaxKind::Plus, SyntaxKind::Minus],
-            Some(SyntaxKind::Equals),
+            vec![TokenKind::Plus, TokenKind::Minus],
+            Some(TokenKind::Equals),
             0..1,
             expect!["error at 0..1: expected '+' or '-', but found '='"],
         );

@@ -1,8 +1,10 @@
 use logos::Logos;
+use std::fmt;
+use strum_macros::EnumIter;
 
 /// The kind of a token produced by the lexer.
 /// It is called this for consistency with Rowan, the parsing library.
-#[derive(Logos, Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Logos, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, EnumIter)]
 #[repr(u16)]
 // #[logos(subpattern close_block_comment = r##"(#|%)\}"##)]
 // #[logos(subpattern open_block_comment = r##"(#|%)\{"##)]
@@ -155,6 +157,39 @@ pub enum TokenKind {
 
     #[doc(hidden)]
     __LAST,
+}
+
+impl TokenKind {
+    pub fn is_trivia(self) -> bool {
+        matches!(self, Self::Whitespace | Self::Comment)
+    }
+
+    pub fn is_keyword_statement(&self) -> bool {
+        (TokenKind::FnKw..=TokenKind::EndKw).contains(self)
+    }
+}
+
+impl fmt::Display for TokenKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::Whitespace => "whitespace",
+            Self::FnKw => "'fn'",
+            Self::Identifier => "identifier",
+            Self::Number => "number",
+            Self::Plus => "'+'",
+            Self::Minus => "'-'",
+            Self::Asterisk => "'*'",
+            Self::Slash => "'/'",
+            Self::Equals => "'='",
+            Self::LParen => "'('",
+            Self::RParen => "')'",
+            Self::LBrace => "'{'",
+            Self::RBrace => "'}'",
+            Self::Comment => "comment",
+            Self::Error => "an unrecognized token",
+            _ => todo!(),
+        })
+    }
 }
 
 #[cfg(test)]
