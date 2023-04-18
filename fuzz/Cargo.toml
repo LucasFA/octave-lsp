@@ -1,0 +1,21 @@
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package]
+name = "ast"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[[bin]]
+name = "parse_lower"
+path = "fuzz_targets/parse_lower.rs"
+
+[dependencies]
+ast = {path = "../crates/ast"}
+hir = {path = "../crates/hir"}
+libfuzzer-sys = "0.3"
+parser = {path = "../crates/parser"}
+
+[package.metadata]
+cargo-fuzz = true
