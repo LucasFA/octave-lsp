@@ -8,6 +8,9 @@ use strum_macros::EnumIter;
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum OctaveLanguage {}
 
+pub type SyntaxToken = rowan::SyntaxToken<OctaveLanguage>;
+pub type SyntaxElement = rowan::SyntaxElement<OctaveLanguage>;
+
 impl rowan::Language for OctaveLanguage {
     type Kind = SyntaxKind;
 
