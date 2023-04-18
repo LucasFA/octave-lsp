@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn lex_underscore_identifier() {
         // According to the GNU documentation,
-        // Names that begin and end with two underscores are understood to be reserved for internal use by Octave. You should not use them in code you write, except to access Octave’s documented internal variables and built-in symbolic constants.
+        // Names that begin and end with two underscores are understood to be reserved for internal use by Octave. You should not use them in code you write, except to access Octave's documented internal variables and built-in symbolic constants.
         check("__x__", TokenKind::Identifier);
     }
 

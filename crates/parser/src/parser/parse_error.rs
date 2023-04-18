@@ -43,8 +43,8 @@ impl fmt::Display for ParseError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::ops::Range as StdRange;
     use expect_test::expect;
+    use std::ops::Range as StdRange;
 
     fn check(
         expected: Vec<SyntaxKind>,
@@ -101,7 +101,7 @@ mod tests {
         );
     }
 
-     #[test]
+    #[test]
     fn two_expected_did_find() {
         check(
             vec![SyntaxKind::Plus, SyntaxKind::Minus],

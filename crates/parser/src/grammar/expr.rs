@@ -32,6 +32,7 @@ impl UnaryOp {
     }
 }
 
+#[inline]
 pub(super) fn expr(p: &mut Parser) -> Option<CompletedMarker> {
     expr_binding_power(p, 0)
 }

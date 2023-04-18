@@ -28,8 +28,7 @@ fn handle_variable(p: &mut Parser) -> CompletedMarker {
     // get what it is and then
     p.bump();
     expr::expr(p);
-    let m = m.complete(p, SyntaxKind::InfixExpr);
-    m
+    return m.complete(p, SyntaxKind::InfixExpr);
 }
 
 #[cfg(test)]
