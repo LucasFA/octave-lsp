@@ -3,7 +3,6 @@
 use lexer::TokenKind;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
-use std::fmt;
 use strum_macros::EnumIter;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -25,6 +24,7 @@ pub type SyntaxNode = rowan::SyntaxNode<OctaveLanguage>;
 #[derive(
     Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, FromPrimitive, ToPrimitive, EnumIter,
 )]
+#[repr(u16)]
 pub enum SyntaxKind {
     Comment,
     Semicolon,
@@ -81,61 +81,27 @@ pub enum SyntaxKind {
     LessThanEquals,
     GreaterThanEquals,
     Equals,
-    Colon,
 
+    //Puntuaction
+    Colon,
     LBrace,
     RBrace,
     LBracket,
     RBracket,
     LParen,
     RParen,
-
     Identifier,
     Number,
 
-    Error,
-
     // Syntax-level nodes
+    Error,
     Root,
     InfixExpr,
-    Literal,
     ParenExpr,
     PrefixExpr,
+    Literal,
     VariableRef,
     VariableDef,
-}
-
-impl SyntaxKind {
-    pub fn is_trivia(self) -> bool {
-        matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
-    }
-
-    pub fn is_keyword_statement(&self) -> bool {
-        (SyntaxKind::FnKw..=SyntaxKind::EndKw).contains(self)
-    }
-}
-
-impl fmt::Display for SyntaxKind {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            SyntaxKind::Whitespace => "whitespace",
-            SyntaxKind::FnKw => "'fn'",
-            SyntaxKind::Identifier => "identifier",
-            SyntaxKind::Number => "number",
-            SyntaxKind::Plus => "'+'",
-            SyntaxKind::Minus => "'-'",
-            SyntaxKind::Asterisk => "'*'",
-            SyntaxKind::Slash => "'/'",
-            SyntaxKind::Equals => "'='",
-            SyntaxKind::LParen => "'('",
-            SyntaxKind::RParen => "')'",
-            SyntaxKind::LBrace => "'{'",
-            SyntaxKind::RBrace => "'}'",
-            SyntaxKind::Comment => "comment",
-            SyntaxKind::Semicolon => "';'",
-            _ => todo!(),
-        })
-    }
 }
 
 impl From<TokenKind> for SyntaxKind {
@@ -206,83 +172,23 @@ impl From<TokenKind> for SyntaxKind {
             TokenKind::LBrace => Self::LBrace,
             TokenKind::RBrace => Self::RBrace,
             TokenKind::Comment => Self::Comment,
+
             TokenKind::Error => Self::Error,
-            TokenKind::__LAST => unreachable!(),
+            TokenKind::__LAST => unreachable!(r#"Tried to cast "__LAST": TokenKind to SyntaxKind"#),
         }
     }
 }
 
 #[cfg(test)]
 mod test {
+    use strum::IntoEnumIterator;
+
     use crate::SyntaxKind;
     use crate::SyntaxKind::*;
 
     // Test with full coverage. An error here would be hard to debug
-    fn to_kw_or_not_to_kw() -> ([SyntaxKind; 25], [SyntaxKind; 43]) {
-        let keywords = [
-            FnKw,
-            EndFnKw,
-            IfKw,
-            ElseIfKw,
-            ElseKw,
-            EndIfKw,
-            SwitchKw,
-            CaseKw,
-            OtherwiseKw,
-            EndSwitch,
-            WhileKw,
-            EndWhileKw,
-            DoKw,
-            UntilKw,
-            ForKw,
-            EndForKw,
-            BreakKw,
-            ContinueKw,
-            UnwindProtectKw,
-            UnwindProtectCleanupKw,
-            EndUnwindProtectKw,
-            TryKw,
-            CatchKw,
-            EndTryKw,
-            EndKw,
-        ];
-
-        let non_kws = [
-            Whitespace,
-            Newline,
-            Semicolon,
-            Identifier,
-            Number,
-            Plus,
-            Minus,
-            Asterisk,
-            ElmtMult,
-            Slash,
-            ElmtDiv,
-            LeftDiv,
-            ElmtLeftDiv,
-            Caret,
-            ElmtPow,
-            Transpose,
-            ElmtTranspose,
-            Not,
-            And,
-            Or,
-            EqualsEquals,
-            NotEquals,
-            LessThan,
-            GreaterThan,
-            LessThanEquals,
-            GreaterThanEquals,
-            Equals,
-            Colon,
-            LParen,
-            RParen,
-            LBracket,
-            RBracket,
-            LBrace,
-            RBrace,
-            Comment,
+    fn to_kw_or_not_to_kw_syntax() -> ([SyntaxKind; 8], Vec<SyntaxKind>) {
+        let syntax_nodes = [
             Error,
             Root,
             InfixExpr,
@@ -293,45 +199,20 @@ mod test {
             VariableDef,
         ];
 
-        (keywords, non_kws)
-    }
+        let rest = SyntaxKind::iter()
+            .filter(|x| !syntax_nodes.contains(x))
+            .collect();
 
-    fn check_trivia(input: SyntaxKind, expected: bool) {
-        assert_eq!(SyntaxKind::is_trivia(input), expected)
-    }
-
-    fn check_is_keyword(input: SyntaxKind, expected: bool) {
-        assert_eq!(SyntaxKind::is_keyword_statement(&input), expected)
+        (syntax_nodes, rest)
     }
 
     #[test]
     fn full_coverage() {
         use strum::IntoEnumIterator;
-        let (kws, non_kws) = to_kw_or_not_to_kw();
-        assert_eq!(kws.len() + non_kws.len(), SyntaxKind::iter().count())
-    }
-
-    #[test]
-    fn check_trivias() {
-        use strum::IntoEnumIterator;
-        for val in SyntaxKind::iter() {
-            check_trivia(val, [Whitespace, Newline, Comment].contains(&val));
-        }
-    }
-
-    #[test]
-    fn check_yes_keywords() {
-        let (keywords, _) = to_kw_or_not_to_kw();
-        for val in keywords {
-            check_is_keyword(val, true);
-        }
-    }
-
-    #[test]
-    fn check_no_keyword() {
-        let (_, non_kws) = to_kw_or_not_to_kw();
-        for val in non_kws {
-            check_is_keyword(val, false);
-        }
+        let (syntax_nodes, non_syntax_nodes) = to_kw_or_not_to_kw_syntax();
+        assert_eq!(
+            syntax_nodes.len() + non_syntax_nodes.len(),
+            SyntaxKind::iter().count()
+        )
     }
 }

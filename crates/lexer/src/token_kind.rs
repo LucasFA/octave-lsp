@@ -1,10 +1,24 @@
 use logos::Logos;
+use num_derive::{FromPrimitive, ToPrimitive};
 use std::fmt;
 use strum_macros::EnumIter;
 
 /// The kind of a token produced by the lexer.
 /// It is called this for consistency with Rowan, the parsing library.
-#[derive(Logos, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, EnumIter)]
+#[derive(
+    Logos,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    EnumIter,
+    ToPrimitive,
+    FromPrimitive,
+)]
 #[repr(u16)]
 // #[logos(subpattern close_block_comment = r##"(#|%)\}"##)]
 // #[logos(subpattern open_block_comment = r##"(#|%)\{"##)]
@@ -161,7 +175,7 @@ pub enum TokenKind {
 
 impl TokenKind {
     pub fn is_trivia(self) -> bool {
-        matches!(self, Self::Whitespace | Self::Comment)
+        matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
     }
 
     pub fn is_keyword_statement(&self) -> bool {
@@ -187,13 +201,18 @@ impl fmt::Display for TokenKind {
             Self::RBrace => "'}'",
             Self::Comment => "comment",
             Self::Error => "an unrecognized token",
-            _ => todo!(),
+            Self::Semicolon => "';'",
+            _ => todo!("Not yet implemented fmt::Display for TokenKind variant"),
         })
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
+    use strum::IntoEnumIterator;
+
     use crate::{Lexer, TokenKind};
 
     fn check(input: &str, kind: TokenKind) {
@@ -425,5 +444,136 @@ mod tests {
     #[test]
     fn lex_kw_endkw() {
         check("end", TokenKind::EndKw)
+    }
+
+    // Test with full coverage. An error here would be hard to debug
+    fn to_kw_or_not_to_kw() -> ([TokenKind; 25], [TokenKind; 37]) {
+        use crate::TokenKind::*;
+        let keywords = [
+            FnKw,
+            EndFnKw,
+            IfKw,
+            ElseIfKw,
+            ElseKw,
+            EndIfKw,
+            SwitchKw,
+            CaseKw,
+            OtherwiseKw,
+            EndSwitchKw,
+            WhileKw,
+            EndWhileKw,
+            DoKw,
+            UntilKw,
+            ForKw,
+            EndForKw,
+            BreakKw,
+            ContinueKw,
+            UnwindProtectKw,
+            UnwindProtectCleanupKw,
+            EndUnwindProtectKw,
+            TryKw,
+            CatchKw,
+            EndTryKw,
+            EndKw,
+        ];
+
+        let non_kw = [
+            Whitespace,
+            Newline,
+            Semicolon,
+            Identifier,
+            Number,
+            Plus,
+            Minus,
+            Asterisk,
+            ElmtMult,
+            Slash,
+            ElmtDiv,
+            LeftDiv,
+            ElmtLeftDiv,
+            Caret,
+            ElmtPow,
+            Transpose,
+            ElmtTranspose,
+            Not,
+            And,
+            Or,
+            EqualsEquals,
+            NotEquals,
+            LessThan,
+            GreaterThan,
+            LessThanEquals,
+            GreaterThanEquals,
+            Equals,
+            Colon,
+            LParen,
+            RParen,
+            LBracket,
+            RBracket,
+            LBrace,
+            RBrace,
+            Comment,
+            Error,
+            __LAST,
+        ];
+
+        let u: HashSet<TokenKind> = keywords
+            .to_owned()
+            .into_iter()
+            .chain(non_kw.to_owned().into_iter())
+            .collect();
+        let v: HashSet<TokenKind> = TokenKind::iter().collect();
+
+        let dif: Vec<_> = u.symmetric_difference(&v).collect();
+        assert_eq!(dif.len(), 0);
+
+        (keywords, non_kw)
+    }
+
+    fn check_trivia(input: TokenKind, expected: bool) {
+        assert_eq!(TokenKind::is_trivia(input), expected)
+    }
+
+    fn check_is_keyword(input: TokenKind, expected: bool) {
+        assert_eq!(TokenKind::is_keyword_statement(&input), expected)
+    }
+
+    #[test]
+    fn full_coverage() {
+        use strum::IntoEnumIterator;
+        let (kws, non_kws) = to_kw_or_not_to_kw();
+        assert_eq!(kws.len() + non_kws.len(), TokenKind::iter().count())
+    }
+
+    #[test]
+    fn check_trivias() {
+        use strum::IntoEnumIterator;
+        for val in TokenKind::iter() {
+            check_trivia(
+                val,
+                [
+                    TokenKind::Whitespace,
+                    TokenKind::Newline,
+                    TokenKind::Comment,
+                ]
+                .contains(&val),
+            );
+        }
+    }
+
+    #[test]
+    fn check_yes_keywords() {
+        let (keywords, _) = to_kw_or_not_to_kw();
+        for val in keywords {
+            check_is_keyword(val, true);
+        }
+    }
+
+    #[test]
+    fn check_no_keyword() {
+        let (_, non_kws) = to_kw_or_not_to_kw();
+        for val in non_kws {
+            check_is_keyword(val, false);
+        }
     }
 }
