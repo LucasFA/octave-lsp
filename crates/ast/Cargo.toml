@@ -13,3 +13,4 @@ text-size = "1.1.0"
 
 [dev-dependencies]
 parser = {path = "../parser"}
+expect-test = "1.4.1"

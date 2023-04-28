@@ -20,6 +20,16 @@ impl Root {
     pub fn stmts(&self) -> impl Iterator<Item = Stmt> {
         self.0.children().filter_map(Stmt::cast)
     }
+
+    pub fn get_variable_definitions(&self) -> impl Iterator<Item = VariableDef> {
+        self.stmts().filter_map(|stmt| {
+            if let Stmt::VariableDef(var_def) = stmt {
+                Some(var_def)
+            } else {
+                None
+            }
+        })
+    }
 }
 
 impl VariableDef {
@@ -151,3 +161,29 @@ pub struct UnaryExpr(SyntaxNode);
 
 #[derive(Debug)]
 pub struct VariableRef(SyntaxNode);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use expect_test::expect;
+    use parser::parse;
+
+    fn get_root(input: &str) -> Root {
+        let parse = parse(input);
+        Root::cast(parse.syntax()).unwrap()
+    }
+
+    #[test]
+    fn get_variable_defs() {
+        let input = r#"a = 12;
+b = a - 1"
+c = a * b"#;
+        let root = get_root(input);
+        let v: Vec<_> = root.get_variable_definitions().collect();
+        let output = format!("{:?}", v);
+        let expected_output = expect!["[VariableDef(VariableDef@0..8), VariableDef(VariableDef@8..17), VariableDef(VariableDef@19..28)]"];
+
+        expected_output.assert_eq(&output);
+    }
+
+}
