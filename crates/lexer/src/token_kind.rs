@@ -517,11 +517,7 @@ mod tests {
             __LAST,
         ];
 
-        let u: HashSet<TokenKind> = keywords
-            .to_owned()
-            .into_iter()
-            .chain(non_kw.to_owned().into_iter())
-            .collect();
+        let u: HashSet<TokenKind> = keywords.into_iter().chain(non_kw.into_iter()).collect();
         let v: HashSet<TokenKind> = TokenKind::iter().collect();
 
         let dif: Vec<_> = u.symmetric_difference(&v).collect();

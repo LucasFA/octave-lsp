@@ -59,7 +59,7 @@ impl Root {
                 vec![VariableRef::cast(node).unwrap()]
             } else {
                 node.children()
-                    .flat_map(|child| inner_get_variable_references(child))
+                    .flat_map(inner_get_variable_references)
                     .collect()
             }
         }
