@@ -2,21 +2,43 @@ use syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
 pub mod validation;
 
-#[derive(Debug)]
-pub struct VariableDef(SyntaxNode);
+pub trait TypedSyntaxNode {
+    fn cast(node: SyntaxNode) -> Option<Self>
+    where
+        Self: Sized;
+}
 
-#[derive(Debug)]
-pub struct Root(SyntaxNode);
+#[macro_use]
+mod macros {
+    macro_rules! impl_typed_syntax_node {
+        ($struct_name:ident) => {
+            #[derive(Debug)]
+            pub struct $struct_name(SyntaxNode);
+            impl TypedSyntaxNode for $struct_name {
+                fn cast(node: SyntaxNode) -> Option<Self>
+                where
+                    Self: Sized,
+                {
+                    if node.kind() == SyntaxKind::$struct_name {
+                        Some(Self(node))
+                    } else {
+                        None
+                    }
+                }
+            }
+            const _: () = {
+                // Simply a check that struct_name is a variant of SyntaxKind
+                const _: SyntaxKind = SyntaxKind::$struct_name;
+            };
+        };
+    }
+}
+
+impl_typed_syntax_node!(VariableRef);
+impl_typed_syntax_node!(VariableDef);
+impl_typed_syntax_node!(Root);
 
 impl Root {
-    pub fn cast(node: SyntaxNode) -> Option<Self> {
-        if node.kind() == SyntaxKind::Root {
-            Some(Self(node))
-        } else {
-            None
-        }
-    }
-
     pub fn stmts(&self) -> impl Iterator<Item = Stmt> {
         self.0.children().filter_map(Stmt::cast)
     }
@@ -45,9 +67,7 @@ impl VariableDef {
     }
 
     pub fn value(&self) -> Option<Expr> {
-            .children()
-            .last()
-            .and_then(Expr::cast)
+        self.0.children().last().and_then(Expr::cast)
     }
 }
 
@@ -164,9 +184,6 @@ pub struct ParenExpr(SyntaxNode);
 
 #[derive(Debug)]
 pub struct UnaryExpr(SyntaxNode);
-
-#[derive(Debug)]
-pub struct VariableRef(SyntaxNode);
 
 #[cfg(test)]
 mod tests {

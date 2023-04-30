@@ -77,6 +77,7 @@ impl Database {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ast::TypedSyntaxNode;
 
     fn parse(input: &str) -> ast::Root {
         ast::Root::cast(parser::parse(input).syntax()).unwrap()

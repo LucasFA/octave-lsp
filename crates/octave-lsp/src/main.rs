@@ -27,7 +27,7 @@ fn main() -> io::Result<()> {
             println!("{}", error);
         }
 
-        let root = ast::Root::cast(parse.syntax()).unwrap();
+        let root: ast::Root = ast::TypedSyntaxNode::cast(parse.syntax()).unwrap();
 
         dbg!(root
             .stmts()
