@@ -14,9 +14,10 @@ fn handle_variable(p: &mut Parser) -> CompletedMarker {
     p.bump();
 
     if p.at(TokenKind::Equals) {
+        let var_def = lhs.complete(p, SyntaxKind::VariableRef).precede(p);
         p.bump();
         expr::expr(p);
-        return lhs.complete(p, SyntaxKind::VariableDef);
+        return var_def.complete(p, SyntaxKind::VariableDef);
     }
 
     if p.at_end() {
@@ -42,14 +43,15 @@ mod tests {
         check(
             "foo = bar",
             expect![[r#"
-Root@0..9
-  VariableDef@0..9
-    Identifier@0..3 "foo"
-    Whitespace@3..4 " "
-    Equals@4..5 "="
-    Whitespace@5..6 " "
-    VariableRef@6..9
-      Identifier@6..9 "bar""#]],
+                Root@0..9
+                  VariableDef@0..9
+                    VariableRef@0..4
+                      Identifier@0..3 "foo"
+                      Whitespace@3..4 " "
+                    Equals@4..5 "="
+                    Whitespace@5..6 " "
+                    VariableRef@6..9
+                      Identifier@6..9 "bar""#]],
         );
     }
 
@@ -58,15 +60,16 @@ Root@0..9
         check(
             "a = 43;",
             expect![[r#"
-            Root@0..7
-              VariableDef@0..7
-                Identifier@0..1 "a"
-                Whitespace@1..2 " "
-                Equals@2..3 "="
-                Whitespace@3..4 " "
-                Literal@4..6
-                  Number@4..6 "43"
-                Semicolon@6..7 ";""#]],
+                Root@0..7
+                  VariableDef@0..7
+                    VariableRef@0..2
+                      Identifier@0..1 "a"
+                      Whitespace@1..2 " "
+                    Equals@2..3 "="
+                    Whitespace@3..4 " "
+                    Literal@4..6
+                      Number@4..6 "43"
+                    Semicolon@6..7 ";""#]],
         )
     }
 
@@ -75,18 +78,19 @@ Root@0..9
         check(
             "a = 43; 7",
             expect![[r#"
-            Root@0..9
-              VariableDef@0..8
-                Identifier@0..1 "a"
-                Whitespace@1..2 " "
-                Equals@2..3 "="
-                Whitespace@3..4 " "
-                Literal@4..6
-                  Number@4..6 "43"
-                Semicolon@6..7 ";"
-                Whitespace@7..8 " "
-              Literal@8..9
-                Number@8..9 "7""#]],
+                Root@0..9
+                  VariableDef@0..8
+                    VariableRef@0..2
+                      Identifier@0..1 "a"
+                      Whitespace@1..2 " "
+                    Equals@2..3 "="
+                    Whitespace@3..4 " "
+                    Literal@4..6
+                      Number@4..6 "43"
+                    Semicolon@6..7 ";"
+                    Whitespace@7..8 " "
+                  Literal@8..9
+                    Number@8..9 "7""#]],
         )
     }
 
@@ -95,19 +99,20 @@ Root@0..9
         check(
             "a = 43 + ;",
             expect![[r#"
-            Root@0..10
-              VariableDef@0..10
-                Identifier@0..1 "a"
-                Whitespace@1..2 " "
-                Equals@2..3 "="
-                Whitespace@3..4 " "
-                InfixExpr@4..10
-                  Literal@4..7
-                    Number@4..6 "43"
-                    Whitespace@6..7 " "
-                  Plus@7..8 "+"
-                  Whitespace@8..9 " "
-                  Semicolon@9..10 ";""#]],
+                Root@0..10
+                  VariableDef@0..10
+                    VariableRef@0..2
+                      Identifier@0..1 "a"
+                      Whitespace@1..2 " "
+                    Equals@2..3 "="
+                    Whitespace@3..4 " "
+                    InfixExpr@4..10
+                      Literal@4..7
+                        Number@4..6 "43"
+                        Whitespace@6..7 " "
+                      Plus@7..8 "+"
+                      Whitespace@8..9 " "
+                      Semicolon@9..10 ";""#]],
         )
     }
 
@@ -116,26 +121,28 @@ Root@0..9
         check(
             "a = 43 + ;b = a",
             expect![[r#"
-            Root@0..15
-              VariableDef@0..10
-                Identifier@0..1 "a"
-                Whitespace@1..2 " "
-                Equals@2..3 "="
-                Whitespace@3..4 " "
-                InfixExpr@4..10
-                  Literal@4..7
-                    Number@4..6 "43"
-                    Whitespace@6..7 " "
-                  Plus@7..8 "+"
-                  Whitespace@8..9 " "
-                  Semicolon@9..10 ";"
-              VariableDef@10..15
-                Identifier@10..11 "b"
-                Whitespace@11..12 " "
-                Equals@12..13 "="
-                Whitespace@13..14 " "
-                VariableRef@14..15
-                  Identifier@14..15 "a""#]],
+                Root@0..15
+                  VariableDef@0..10
+                    VariableRef@0..2
+                      Identifier@0..1 "a"
+                      Whitespace@1..2 " "
+                    Equals@2..3 "="
+                    Whitespace@3..4 " "
+                    InfixExpr@4..10
+                      Literal@4..7
+                        Number@4..6 "43"
+                        Whitespace@6..7 " "
+                      Plus@7..8 "+"
+                      Whitespace@8..9 " "
+                      Semicolon@9..10 ";"
+                  VariableDef@10..15
+                    VariableRef@10..12
+                      Identifier@10..11 "b"
+                      Whitespace@11..12 " "
+                    Equals@12..13 "="
+                    Whitespace@13..14 " "
+                    VariableRef@14..15
+                      Identifier@14..15 "a""#]],
         )
     }
 
@@ -144,21 +151,23 @@ Root@0..9
         check(
             "a = ;\nb = a",
             expect![[r#"
-Root@0..11
-  VariableDef@0..6
-    Identifier@0..1 "a"
-    Whitespace@1..2 " "
-    Equals@2..3 "="
-    Whitespace@3..4 " "
-    Semicolon@4..5 ";"
-    Newline@5..6 "\n"
-  VariableDef@6..11
-    Identifier@6..7 "b"
-    Whitespace@7..8 " "
-    Equals@8..9 "="
-    Whitespace@9..10 " "
-    VariableRef@10..11
-      Identifier@10..11 "a""#]],
+                Root@0..11
+                  VariableDef@0..6
+                    VariableRef@0..2
+                      Identifier@0..1 "a"
+                      Whitespace@1..2 " "
+                    Equals@2..3 "="
+                    Whitespace@3..4 " "
+                    Semicolon@4..5 ";"
+                    Newline@5..6 "\n"
+                  VariableDef@6..11
+                    VariableRef@6..8
+                      Identifier@6..7 "b"
+                      Whitespace@7..8 " "
+                    Equals@8..9 "="
+                    Whitespace@9..10 " "
+                    VariableRef@10..11
+                      Identifier@10..11 "a""#]],
         );
     }
 
@@ -197,17 +206,18 @@ Root@0..3
         check(
             "a = 1\na",
             expect![[r#"
-Root@0..7
-  VariableDef@0..6
-    Identifier@0..1 "a"
-    Whitespace@1..2 " "
-    Equals@2..3 "="
-    Whitespace@3..4 " "
-    Literal@4..6
-      Number@4..5 "1"
-      Newline@5..6 "\n"
-  VariableRef@6..7
-    Identifier@6..7 "a""#]],
+                Root@0..7
+                  VariableDef@0..6
+                    VariableRef@0..2
+                      Identifier@0..1 "a"
+                      Whitespace@1..2 " "
+                    Equals@2..3 "="
+                    Whitespace@3..4 " "
+                    Literal@4..6
+                      Number@4..5 "1"
+                      Newline@5..6 "\n"
+                  VariableRef@6..7
+                    Identifier@6..7 "a""#]],
         );
     }
 
