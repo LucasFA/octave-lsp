@@ -52,6 +52,19 @@ impl Root {
             }
         })
     }
+
+    pub fn get_variable_references(&self) -> Vec<VariableRef> {
+        fn inner_get_variable_references(node: SyntaxNode) -> Vec<VariableRef> {
+            if node.kind() == SyntaxKind::VariableRef {
+                vec![VariableRef::cast(node).unwrap()]
+            } else {
+                node.children()
+                    .flat_map(|child| inner_get_variable_references(child))
+                    .collect()
+            }
+        }
+        inner_get_variable_references(self.0.to_owned())
+    }
 }
 
 impl VariableDef {
@@ -209,4 +222,17 @@ c = a * b"#;
         expected_output.assert_eq(&output);
     }
 
+    #[test]
+    fn get_variable_refs() {
+        let input = r#"a = 12;
+a + 3
+b = a - 1"#;
+        let root = get_root(input);
+        let v = root.get_variable_references();
+
+        let output = format!("{:?}", v);
+        let expected_output = expect!["[VariableRef(VariableRef@0..2), VariableRef(VariableRef@8..10), VariableRef(VariableRef@14..16), VariableRef(VariableRef@18..20)]"];
+
+        expected_output.assert_eq(&output);
+    }
 }
