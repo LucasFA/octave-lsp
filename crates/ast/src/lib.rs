@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
 pub mod validation;
@@ -53,6 +55,7 @@ impl Root {
         })
     }
 
+    #[must_use]
     pub fn get_variable_references(&self) -> Vec<VariableRef> {
         fn inner_get_variable_references(node: SyntaxNode) -> Vec<VariableRef> {
             if node.kind() == SyntaxKind::VariableRef {
@@ -63,7 +66,7 @@ impl Root {
                     .collect()
             }
         }
-        inner_get_variable_references(self.0.to_owned())
+        inner_get_variable_references(self.0.clone())
     }
 }
 
@@ -85,6 +88,7 @@ impl VariableDef {
 }
 
 impl Expr {
+    #[must_use]
     pub fn cast(node: SyntaxNode) -> Option<Self> {
         let result = match node.kind() {
             SyntaxKind::InfixExpr => Self::BinaryExpr(BinaryExpr(node)),
@@ -141,10 +145,12 @@ impl ParenExpr {
 }
 
 impl Literal {
+    #[must_use]
     pub fn parse(&self) -> Option<u64> {
         self.0.first_token().unwrap().text().parse().ok()
     }
 
+    #[must_use]
     pub fn cast(node: SyntaxNode) -> Option<Self> {
         if node.kind() == SyntaxKind::Literal {
             Some(Self(node))
@@ -155,6 +161,7 @@ impl Literal {
 }
 
 impl VariableRef {
+    #[must_use]
     pub fn name(&self) -> Option<SyntaxToken> {
         self.0.first_token()
     }
@@ -167,6 +174,7 @@ pub enum Stmt {
 }
 
 impl Stmt {
+    #[must_use]
     pub fn cast(node: SyntaxNode) -> Option<Self> {
         let result = match node.kind() {
             SyntaxKind::VariableDef => Self::VariableDef(VariableDef(node)),
@@ -216,7 +224,7 @@ b = a - 1"
 c = a * b"#;
         let root = get_root(input);
         let v: Vec<_> = root.get_variable_definitions().collect();
-        let output = format!("{:?}", v);
+        let output = format!("{v:?}");
         let expected_output = expect!["[VariableDef(VariableDef@0..8), VariableDef(VariableDef@8..17), VariableDef(VariableDef@19..28)]"];
 
         expected_output.assert_eq(&output);
@@ -230,7 +238,7 @@ b = a - 1"#;
         let root = get_root(input);
         let v = root.get_variable_references();
 
-        let output = format!("{:?}", v);
+        let output = format!("{v:?}");
         let expected_output = expect!["[VariableRef(VariableRef@0..2), VariableRef(VariableRef@8..10), VariableRef(VariableRef@14..16), VariableRef(VariableRef@18..20)]"];
 
         expected_output.assert_eq(&output);

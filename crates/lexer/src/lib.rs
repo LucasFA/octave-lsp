@@ -4,6 +4,8 @@
 //! In general terms, the lexer takes a string as input and produces a stream of tokens as output.
 //! Those tokens are represented by the Token struct, which holds the kind of the token and the text that it holds.
 
+#![warn(clippy::pedantic)]
+
 mod token_kind;
 pub use token_kind::TokenKind;
 
@@ -16,6 +18,7 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
+    #[must_use]
     pub fn new(input: &'a str) -> Self {
         Self {
             inner: TokenKind::lexer(input),

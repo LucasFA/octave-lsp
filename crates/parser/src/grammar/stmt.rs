@@ -1,4 +1,4 @@
-use super::*;
+use super::{expr, CompletedMarker, Parser, SyntaxKind, TokenKind};
 
 pub(super) fn stmt(p: &mut Parser) -> Option<CompletedMarker> {
     if p.at(TokenKind::Identifier) {

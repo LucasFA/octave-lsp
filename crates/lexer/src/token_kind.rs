@@ -174,10 +174,11 @@ pub enum TokenKind {
 }
 
 impl TokenKind {
+    #[must_use]
     pub fn is_trivia(self) -> bool {
         matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
     }
-
+    #[must_use]
     pub fn is_keyword_statement(&self) -> bool {
         (TokenKind::FnKw..=TokenKind::EndKw).contains(self)
     }

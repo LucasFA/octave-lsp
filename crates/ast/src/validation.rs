@@ -3,6 +3,7 @@ use std::fmt;
 use syntax::SyntaxNode;
 use text_size::TextRange;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq)]
 pub struct ValidationError {
     kind: ValidationErrorKind,
@@ -38,19 +39,20 @@ impl fmt::Display for ValidationError {
     }
 }
 
+#[must_use]
 pub fn validate(node: &SyntaxNode) -> Vec<ValidationError> {
     let mut errors = Vec::new();
 
     for node in node.descendants() {
         if let Some(literal) = Literal::cast(node) {
-            validate_literal(literal, &mut errors)
+            validate_literal(&literal, &mut errors);
         }
     }
 
     errors
 }
 
-fn validate_literal(literal: Literal, errors: &mut Vec<ValidationError>) {
+fn validate_literal(literal: &Literal, errors: &mut Vec<ValidationError>) {
     if literal.parse().is_none() {
         errors.push(ValidationError {
             kind: ValidationErrorKind::NumberLiteralTooLarge,

@@ -1,4 +1,5 @@
 //! Defines the equivalence from Lexical tokens to Syntactical tokens.
+#![warn(clippy::pedantic)]
 
 use lexer::TokenKind;
 use num_derive::{FromPrimitive, ToPrimitive};
@@ -183,6 +184,8 @@ impl From<TokenKind> for SyntaxKind {
 }
 
 #[cfg(test)]
+#[allow(clippy::semicolon_if_nothing_returned)]
+#[allow(clippy::needless_pass_by_value)]
 mod test {
     use strum::IntoEnumIterator;
 

@@ -3,7 +3,7 @@
 //! You can read more about the language server protocol [here](https://microsoft.github.io/language-server-protocol/).
 //! The architecture of this language server is documented in the [ARCHITECTURE](../../../docs/architecture.md) file.
 #![warn(missing_docs)]
-
+#![warn(clippy::pedantic)]
 use parser::parse;
 use std::io::{self, Write};
 
@@ -24,7 +24,7 @@ fn main() -> io::Result<()> {
 
         let syntax = parse.syntax();
         for error in ast::validation::validate(&syntax) {
-            println!("{}", error);
+            println!("{error}");
         }
 
         let root: ast::Root = ast::TypedSyntaxNode::cast(parse.syntax()).unwrap();

@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 mod database;
 pub use database::Database;
 
@@ -45,6 +47,7 @@ pub enum UnaryOp {
     Neg,
 }
 
+#[must_use]
 pub fn lower(ast: ast::Root) -> (Database, Vec<Stmt>) {
     let mut db = Database::default();
     let stmts = ast.stmts().filter_map(|stmt| db.lower_stmt(stmt)).collect();

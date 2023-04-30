@@ -24,16 +24,16 @@ impl fmt::Display for ParseError {
 
         for (idx, expected_kind) in self.expected.iter().enumerate() {
             if is_first(idx) {
-                write!(f, " {}", expected_kind)?;
+                write!(f, " {expected_kind}")?;
             } else if is_last(idx) {
-                write!(f, " or {}", expected_kind)?;
+                write!(f, " or {expected_kind}")?;
             } else {
-                write!(f, ", {}", expected_kind)?;
+                write!(f, ", {expected_kind}")?;
             }
         }
 
         if let Some(found) = self.found {
-            write!(f, ", but found {}", found)?;
+            write!(f, ", but found {found}")?;
         }
 
         Ok(())
@@ -62,7 +62,7 @@ mod tests {
             },
         };
 
-        output.assert_eq(format!("{}", error).as_str());
+        output.assert_eq(format!("{error}").as_str());
         // assert_eq!(format!("{}", error), output);
     }
 
