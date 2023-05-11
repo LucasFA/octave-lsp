@@ -1,7 +1,7 @@
 use logos::Logos;
-use num_derive::{FromPrimitive, ToPrimitive};
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::fmt;
-use strum_macros::EnumIter;
+use strum_macros::EnumCount;
 
 /// The kind of a token produced by the lexer.
 /// It is called this for consistency with Rowan, the parsing library.
@@ -15,13 +15,14 @@ use strum_macros::EnumIter;
     PartialOrd,
     Ord,
     Hash,
-    EnumIter,
-    ToPrimitive,
-    FromPrimitive,
+    IntoPrimitive,
+    TryFromPrimitive,
+    EnumCount,
 )]
-#[repr(u16)]
+#[cfg_attr(test, derive(strum_macros::EnumIter))]
 // #[logos(subpattern close_block_comment = r##"(#|%)\}"##)]
 // #[logos(subpattern open_block_comment = r##"(#|%)\{"##)]
+#[repr(u8)]
 pub enum TokenKind {
     // This would be ideal for block comments, but logos doesn't support non-greedy regexes
     // #[regex(r##"(#|%)\{\s*\n(.|\n)*?(#|%)\}"##)]

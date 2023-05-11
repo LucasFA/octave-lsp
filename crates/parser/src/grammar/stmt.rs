@@ -1,4 +1,6 @@
-use super::{expr, CompletedMarker, Parser, SyntaxKind, TokenKind};
+use syntax::SyntaxConstruct;
+
+use super::{expr, CompletedMarker, Parser, TokenKind};
 
 pub(super) fn stmt(p: &mut Parser) -> Option<CompletedMarker> {
     if p.at(TokenKind::Identifier) {
@@ -14,23 +16,25 @@ fn handle_variable(p: &mut Parser) -> CompletedMarker {
     p.bump();
 
     if p.at(TokenKind::Equals) {
-        let var_def = lhs.complete(p, SyntaxKind::VariableRef).precede(p);
+        let var_def = lhs
+            .complete(p, SyntaxConstruct::VariableRef.into())
+            .precede(p);
         p.bump();
         expr::expr(p);
-        return var_def.complete(p, SyntaxKind::VariableDef);
+        return var_def.complete(p, SyntaxConstruct::VariableDef.into());
     }
 
     if p.at_end() {
-        return lhs.complete(p, SyntaxKind::VariableRef);
+        return lhs.complete(p, SyntaxConstruct::VariableRef.into());
     }
 
-    let lhs = lhs.complete(p, SyntaxKind::VariableRef);
+    let lhs = lhs.complete(p, SyntaxConstruct::VariableRef.into());
     let m = lhs.precede(p);
     // get what it is and then
     p.bump();
     expr::expr(p);
 
-    m.complete(p, SyntaxKind::InfixExpr)
+    m.complete(p, SyntaxConstruct::InfixExpr.into())
 }
 
 #[cfg(test)]

@@ -3,7 +3,7 @@
 use crate::parser::marker::CompletedMarker;
 use crate::parser::Parser;
 use lexer::TokenKind;
-use syntax::SyntaxKind;
+use syntax::SyntaxConstruct;
 
 enum BinaryOp {
     Add,
@@ -43,7 +43,7 @@ fn literal(p: &mut Parser) -> CompletedMarker {
 
     let m = p.start();
     p.bump();
-    m.complete(p, SyntaxKind::Literal)
+    m.complete(p, SyntaxConstruct::Literal.into())
 }
 
 fn variable_ref(p: &mut Parser) -> CompletedMarker {
@@ -51,7 +51,7 @@ fn variable_ref(p: &mut Parser) -> CompletedMarker {
 
     let m = p.start();
     p.bump();
-    m.complete(p, SyntaxKind::VariableRef)
+    m.complete(p, SyntaxConstruct::VariableRef.into())
 }
 
 fn prefix_expr(p: &mut Parser) -> CompletedMarker {
@@ -67,7 +67,7 @@ fn prefix_expr(p: &mut Parser) -> CompletedMarker {
 
     expr_binding_power(p, right_binding_power);
 
-    m.complete(p, SyntaxKind::PrefixExpr)
+    m.complete(p, SyntaxConstruct::PrefixExpr.into())
 }
 
 fn paren_expr(p: &mut Parser) -> CompletedMarker {
@@ -80,7 +80,7 @@ fn paren_expr(p: &mut Parser) -> CompletedMarker {
 
     p.expect(TokenKind::RParen);
 
-    m.complete(p, SyntaxKind::ParenExpr)
+    m.complete(p, SyntaxConstruct::ParenExpr.into())
 }
 
 fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
@@ -136,7 +136,7 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) -> Option<Compl
         let m = lhs.precede(p);
 
         let parsed_rhs = expr_binding_power(p, right_binding_power).is_some();
-        lhs = m.complete(p, SyntaxKind::InfixExpr);
+        lhs = m.complete(p, SyntaxConstruct::InfixExpr.into());
 
         if !parsed_rhs {
             break;

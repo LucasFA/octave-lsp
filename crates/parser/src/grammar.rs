@@ -4,6 +4,7 @@ mod stmt;
 use crate::parser::marker::CompletedMarker;
 use crate::parser::Parser;
 use lexer::TokenKind;
+use syntax::SyntaxConstruct;
 use syntax::SyntaxKind;
 
 pub(crate) fn root(p: &mut Parser) -> CompletedMarker {
@@ -12,5 +13,5 @@ pub(crate) fn root(p: &mut Parser) -> CompletedMarker {
         stmt::stmt(p);
     }
 
-    m.complete(p, SyntaxKind::Root)
+    m.complete(p, SyntaxKind::SyntaxConstruct(SyntaxConstruct::Root))
 }

@@ -1,7 +1,6 @@
 #![warn(clippy::pedantic)]
 
-use syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
-
+use syntax::{SyntaxConstruct, SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken, TokenKind};
 pub mod validation;
 
 pub trait TypedSyntaxNode {
@@ -21,7 +20,8 @@ mod macros {
                 where
                     Self: Sized,
                 {
-                    if node.kind() == SyntaxKind::$struct_name {
+                    if let SyntaxKind::SyntaxConstruct(SyntaxConstruct::$struct_name) = node.kind()
+                    {
                         Some(Self(node))
                     } else {
                         None
@@ -29,8 +29,8 @@ mod macros {
                 }
             }
             const _: () = {
-                // Simply a check that struct_name is a variant of SyntaxKind
-                const _: SyntaxKind = SyntaxKind::$struct_name;
+                // Simply a check that struct_name is a variant of SyntaxConstruct
+                const _: SyntaxConstruct = SyntaxConstruct::$struct_name;
             };
         };
     }
@@ -58,7 +58,7 @@ impl Root {
     #[must_use]
     pub fn get_variable_references(&self) -> Vec<VariableRef> {
         fn inner_get_variable_references(node: SyntaxNode) -> Vec<VariableRef> {
-            if node.kind() == SyntaxKind::VariableRef {
+            if node.kind() == SyntaxConstruct::VariableRef.into() {
                 vec![VariableRef::cast(node).unwrap()]
             } else {
                 node.children()
@@ -75,11 +75,11 @@ impl VariableDef {
         self.0
             .children_with_tokens()
             .filter_map(SyntaxElement::into_node)
-            .find(|node| node.kind() == SyntaxKind::VariableRef)
+            .find(|node| node.kind() == SyntaxConstruct::VariableRef.into())
             .unwrap()
             .children_with_tokens()
             .filter_map(SyntaxElement::into_token)
-            .find(|token| token.kind() == SyntaxKind::Identifier)
+            .find(|token| token.kind() == TokenKind::Identifier.into())
     }
 
     pub fn value(&self) -> Option<Expr> {
@@ -90,14 +90,21 @@ impl VariableDef {
 impl Expr {
     #[must_use]
     pub fn cast(node: SyntaxNode) -> Option<Self> {
-        let result = match node.kind() {
-            SyntaxKind::InfixExpr => Self::BinaryExpr(BinaryExpr(node)),
-            SyntaxKind::Literal => Self::Literal(Literal(node)),
-            SyntaxKind::ParenExpr => Self::ParenExpr(ParenExpr(node)),
-            SyntaxKind::PrefixExpr => Self::UnaryExpr(UnaryExpr(node)),
-            SyntaxKind::VariableRef => Self::VariableRef(VariableRef(node)),
-            _ => return None,
-        };
+        let result;
+        if let SyntaxKind::SyntaxConstruct(inner) = node.kind() {
+            result = match inner {
+                SyntaxConstruct::InfixExpr => Self::BinaryExpr(BinaryExpr(node)),
+                SyntaxConstruct::Literal => Self::Literal(Literal(node)),
+                SyntaxConstruct::ParenExpr => Self::ParenExpr(ParenExpr(node)),
+                SyntaxConstruct::PrefixExpr => Self::UnaryExpr(UnaryExpr(node)),
+                SyntaxConstruct::VariableRef => Self::VariableRef(VariableRef(node)),
+                SyntaxConstruct::Error => return None,
+                SyntaxConstruct::Root => unreachable!(),
+                SyntaxConstruct::VariableDef => unreachable!(),
+            };
+        } else {
+            return None;
+        }
 
         Some(result)
     }
@@ -117,10 +124,14 @@ impl BinaryExpr {
             .children_with_tokens()
             .filter_map(SyntaxElement::into_token)
             .find(|token| {
-                matches!(
-                    token.kind(),
-                    SyntaxKind::Plus | SyntaxKind::Minus | SyntaxKind::Asterisk | SyntaxKind::Slash,
-                )
+                if let SyntaxKind::LexToken(inner) = token.kind() {
+                    matches!(
+                        inner,
+                        TokenKind::Plus | TokenKind::Minus | TokenKind::Asterisk | TokenKind::Slash,
+                    )
+                } else {
+                    false
+                }
             })
     }
 }
@@ -134,7 +145,7 @@ impl UnaryExpr {
         self.0
             .children_with_tokens()
             .filter_map(SyntaxElement::into_token)
-            .find(|token| token.kind() == SyntaxKind::Minus)
+            .find(|token| token.kind() == TokenKind::Minus.into())
     }
 }
 
@@ -152,7 +163,7 @@ impl Literal {
 
     #[must_use]
     pub fn cast(node: SyntaxNode) -> Option<Self> {
-        if node.kind() == SyntaxKind::Literal {
+        if node.kind() == SyntaxConstruct::Literal.into() {
             Some(Self(node))
         } else {
             None
@@ -177,7 +188,9 @@ impl Stmt {
     #[must_use]
     pub fn cast(node: SyntaxNode) -> Option<Self> {
         let result = match node.kind() {
-            SyntaxKind::VariableDef => Self::VariableDef(VariableDef(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::VariableDef) => {
+                Self::VariableDef(VariableDef(node))
+            }
             _ => Self::Expr(Expr::cast(node)?),
         };
 

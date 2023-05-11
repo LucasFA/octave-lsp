@@ -9,7 +9,7 @@ use crate::source::Source;
 use lexer::{Token, TokenKind};
 use marker::Marker;
 use std::mem;
-use syntax::SyntaxKind;
+use syntax::SyntaxConstruct;
 
 const RECOVERY_SET: [TokenKind; 0] = [];
 
@@ -84,7 +84,7 @@ impl<'t, 'input> Parser<'t, 'input> {
         if !self.at_set(&RECOVERY_SET) && !self.at_end() {
             let m = self.start();
             self.bump();
-            m.complete(self, SyntaxKind::Error);
+            m.complete(self, SyntaxConstruct::Error.into());
         }
     }
 

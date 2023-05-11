@@ -1,6 +1,6 @@
 use crate::{BinaryOp, Expr, Stmt, UnaryOp};
 use la_arena::Arena;
-use syntax::SyntaxKind;
+use syntax::{SyntaxKind, TokenKind};
 
 #[derive(Debug, PartialEq, Default)]
 pub struct Database {
@@ -42,10 +42,10 @@ impl Database {
 
     fn lower_binary(&mut self, ast: ast::BinaryExpr) -> Expr {
         let op = match ast.op().unwrap().kind() {
-            SyntaxKind::Plus => BinaryOp::Add,
-            SyntaxKind::Minus => BinaryOp::Sub,
-            SyntaxKind::Asterisk => BinaryOp::Mul,
-            SyntaxKind::Slash => BinaryOp::Div,
+            SyntaxKind::LexToken(TokenKind::Plus) => BinaryOp::Add,
+            SyntaxKind::LexToken(TokenKind::Minus) => BinaryOp::Sub,
+            SyntaxKind::LexToken(TokenKind::Asterisk) => BinaryOp::Mul,
+            SyntaxKind::LexToken(TokenKind::Slash) => BinaryOp::Div,
             _ => unreachable!(),
         };
 
@@ -61,7 +61,7 @@ impl Database {
 
     fn lower_unary(&mut self, ast: ast::UnaryExpr) -> Expr {
         let op = match ast.op().unwrap().kind() {
-            SyntaxKind::Minus => UnaryOp::Neg,
+            SyntaxKind::LexToken(TokenKind::Minus) => UnaryOp::Neg,
             _ => unreachable!(),
         };
 
