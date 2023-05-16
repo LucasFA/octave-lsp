@@ -1,9 +1,12 @@
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
-name = "ast"
+authors = ["Aramis Razzaghipour <aramisnoah@gmail.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+name = "fuzz"
 version = "0.1.0"
-edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
 
 [workspace]
 
@@ -16,7 +19,3 @@ ast = {path = "../crates/ast"}
 hir = {path = "../crates/hir"}
 libfuzzer-sys = "0.3"
 parser = {path = "../crates/parser"}
-
-[package.metadata]
-cargo-fuzz = true
-
