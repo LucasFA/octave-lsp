@@ -38,7 +38,7 @@ module.exports = grammar({
         parameters: $ => seq(
             $.identifier,
             repeat(seq(',', $.identifier))
-        )
+        ),
 
         _type: $ => choice(
             'bool'
@@ -53,8 +53,6 @@ module.exports = grammar({
 
         _statement: $ => choice(
             $.if_statement,
-            $.while_statement,
-            $.expression_statement,
         ),
 
         // return_statement: $ => seq(
