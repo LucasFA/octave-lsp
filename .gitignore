@@ -18,10 +18,12 @@ editors/code/*.js
 editors/code/*.js.map
 
 # Tree sitter
-tree-sitter/bindings/
-tree-sitter/binding.gyp
-tree-sitter/bindings/package.json
 node_modules/
+tree-sitter-octave/bindings/
+tree-sitter-octave/package-lock.json
+tree-sitter-octave/node_modules/
+tree-sitter-octave/binding.gyp
+tree-sitter-octave/src/
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/rust,node
@@ -156,9 +158,3 @@ Cargo.lock
 
 # End of https://www.toptal.com/developers/gitignore/api/rust,node
 
-
-# tree sitter
-tree-sitter-octave/package-lock.json
-tree-sitter-octave/bindings/
-tree-sitter-octave/node_modules/
-tree-sitter-octave/binding.gyp

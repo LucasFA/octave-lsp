@@ -16,7 +16,7 @@ module.exports = grammar({
 
         variable_definition: $ => seq(
             $.identifier,
-            '=',
+            optional(seq($.identifier, '=')),
             $._expression,
             optional(';')
         ),
