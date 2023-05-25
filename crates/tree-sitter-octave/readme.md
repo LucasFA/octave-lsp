@@ -6,4 +6,4 @@ Then you can build the parser and run tests with:
 tree-sitter generate
 tree-sitter test
 ```
-
+Notice that `tree-sitter test` has a `-u` flag to update the test output.

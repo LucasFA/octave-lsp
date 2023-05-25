@@ -19,11 +19,11 @@ editors/code/*.js.map
 
 # Tree sitter
 node_modules/
-tree-sitter-octave/bindings/
-tree-sitter-octave/package-lock.json
-tree-sitter-octave/node_modules/
-tree-sitter-octave/binding.gyp
-tree-sitter-octave/src
+**/tree-sitter-octave/bindings/
+**/tree-sitter-octave/package-lock.json
+**/tree-sitter-octave/node_modules/
+**/tree-sitter-octave/binding.gyp
+**/tree-sitter-octave/src
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/rust,node

@@ -1,0 +1,106 @@
+================================================================================
+Empty function
+================================================================================
+
+function wakeup
+    
+endfunction
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)))
+
+================================================================================
+Empty function with value
+================================================================================
+
+
+function y = f
+
+endfunction
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (return_value
+      (identifier))
+    (equals)
+    (identifier)))
+
+================================================================================
+Empty function with 0 arguments arg list
+================================================================================
+
+function f()
+
+endfunction
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)))
+
+================================================================================
+Empty function with 3 arguments arg list
+================================================================================
+
+
+function f(ide, iden, identi)
+
+endfunction
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list
+      (list_of_identifiers
+        (identifier)
+        (identifier)
+        (identifier)))))
+
+================================================================================
+Empty function with everything
+================================================================================
+
+function y = function_name(var1, var2)
+
+endfunction
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (return_value
+      (identifier))
+    (equals)
+    (identifier)
+    (parameter_list
+      (list_of_identifiers
+        (identifier)
+        (identifier)))))
+
+================================================================================
+Empty function with list return
+================================================================================
+
+function [y, z] = function_name
+end
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (return_value
+      (ret_list
+        (list_of_identifiers
+          (identifier)
+          (identifier))))
+    (equals)
+    (identifier)))
