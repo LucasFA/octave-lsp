@@ -164,7 +164,8 @@ pub enum TokenKind {
     Identifier,
     // A number is a sequence of digits, possibly containing a decimal point.
     #[regex(r"\d+")] // Integers
-    #[regex(r"\d*\.\d*")] // Floats
+    #[regex(r"\d*\.\d+")] // Floats
+    #[regex(r"\d+\.\d*")]
     Number,
 
     #[error]

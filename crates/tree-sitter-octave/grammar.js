@@ -6,28 +6,24 @@ module.exports = grammar({
     name: 'octave',
 
     rules: {
-        source_file: $ => repeat($._definition),
+        source_file: $ => repeat($._statement),
 
         _definition: $ => choice(
             $.function_definition,
             $.variable_definition
-            // TODO: other kinds of definitions
         ),
 
         variable_definition: $ => seq(
-            $.identifier,
-            $.equals,
-            $._expression,
-            optional(';')
+            field("name", $.identifier),
+            "=",
+            field("value", $._expression),
         ),
-        
-        equals: $ => token('='),
 
         function_definition: $ => seq(
-            'function',
-            optional(seq($.return_value, $.equals)),
+            "function",
+            optional(seq($.return_value, "=")),
             $.identifier,
-            optional($.parameter_list),
+            field("parameters", optional($.parameter_list)),
             repeat($._statement),
             choice('endfunction', 'end')
         ),
@@ -59,6 +55,8 @@ module.exports = grammar({
 
         _statement: $ => choice(
             $.if_statement,
+            seq($._expression, ';'),
+            $._definition
         ),
 
         // return_statement: $ => seq(
@@ -68,24 +66,27 @@ module.exports = grammar({
         // ),
 
         if_statement: $ => seq(
-            'if',
-            $._expression,
-            $.block,
+            'if', $._expression,
+
+            optional(repeat($.else_if_clause)),
             optional($.else_clause),
             choice('end', 'endif')
         ),
 
+        else_if_clause: $ => seq(
+            'elseif',
+            $._statement
+        ),
+
         else_clause: $ => seq(
             'else',
-            choice(
-                $.if_statement,
-                $._expression
-            )
+            $._expression
         ),
 
         _expression: $ => choice(
             $.identifier,
-            $.number
+            $.number,
+            $.variable_definition,
         ),
 
         identifier: $ => /[a-zA-Z_][a-zA-Z0-9_]*/,
@@ -94,8 +95,69 @@ module.exports = grammar({
             $.integer,
             $.float
         ),
+        
+        float : $ => token(choice(seq(/\d+/, '.', /\d+/), seq(/\d+/, '.'), seq('.', /\d+/))),
+        integer: $ => /\d+/,
 
-        float : $ => choice(seq(/\d+/, '.', /\d+/), seq(/\d+/, '.'), seq('.', /\d+/)),
-        integer: $ => /\d+/
+        // Keywords
+        // function_KW : $ => "function",
+        // endfunction_KW : $ => "endfunction",
+        // if_KW : $ => "if",
+        // elseif_KW : $ => "elseif",
+        // else_KW : $ => "else",
+        // endif_KW : $ => "endif",
+        // switch_KW : $ => "switch",
+        // case_KW : $ => "case",
+        // otherwise_KW : $ => "otherwise",
+        // endswitch_KW : $ => "endswitch",
+        // while_KW : $ => "while",
+        // endwhile_KW : $ => "endwhile",
+        // do_KW : $ => "do",
+        // until_KW : $ => "until",
+        // for_KW : $ => "for",
+        // endfor_KW : $ => "endfor",
+        // break_KW : $ => "break",
+        // continue_KW : $ => "continue",
+        // unwind_protect_KW : $ => "unwind_protect",
+        // unwind_protect_cleanup_KW : $ => "unwind_protect_cleanup",
+        // end_unwind_protect_KW : $ => "end_unwind_protect",
+        // try_KW : $ => "try",
+        // catch_KW : $ => "catch",
+        // end_try_catch_KW : $ => "end_try_catch",
+        // end_KW : $ => "end",
+
+        // Operators
+        // Plus: $ => token("+"),
+        // Minus: $ => token("-"),
+        // Asterisk: $ => token("*"),
+        // ElmtMult: $ => token(".*"),
+        // Slash: $ => token("/"),
+        // ElmtDiv: $ => token("./"),
+        // LeftDiv: $ => token("\\"),
+        // ElmtLeftDiv : $ => token(".\\"),
+        // Caret : $ => token("^"),
+        // ElmtPow : $ => token(".^"),
+        // Transpose : $ => token("'"),
+        // ElmtTranspose : $ => token(".'"),
+        // Not: $ => token("!"),
+        
+        // And : $ => token("&&"),
+        // Or : $ => token("||"),
+        // EqualsEquals : $ => token("=="),
+        // NotEquals : $ => token("!="),
+        // LessThan : $ => token("<"),
+        // GreaterThan : $ => token(">"),
+        // LessThanEquals : $ => token("<="),
+        // GreaterThanEquals: $ => token(">="),
+        
+        // Equals : $ => token("="),
+        // Colon : $ => token(":"),
+
+        // LBrace : $ => token("{"),
+        // RBrace : $ => token("}"),
+        // LBracket : $ => token("["),
+        // RBracket : $ => token("]"),
+        // LParen : $ => token("("),
+        // RParen : $ => token(")"),
     }
 });
