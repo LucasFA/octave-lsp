@@ -155,3 +155,10 @@ Cargo.lock
 *.pdb
 
 # End of https://www.toptal.com/developers/gitignore/api/rust,node
+
+
+# tree sitter
+tree-sitter-octave/package-lock.json
+tree-sitter-octave/bindings/
+tree-sitter-octave/node_modules/
+tree-sitter-octave/binding.gyp
