@@ -1,0 +1,15 @@
+===
+Variable definition
+===
+
+a = 3
+
+---
+
+(source_file
+      (variable_definition
+        (identifier)
+        (equals)
+        (number (integer))
+      )
+)

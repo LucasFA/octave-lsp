@@ -16,26 +16,32 @@ module.exports = grammar({
 
         variable_definition: $ => seq(
             $.identifier,
-            optional(seq($.identifier, '=')),
+            $.equals,
             $._expression,
             optional(';')
         ),
+        
+        equals: $ => token('='),
 
         function_definition: $ => seq(
             'function',
+            optional(seq($.return_value, $.equals)),
             $.identifier,
             optional($.parameter_list),
             repeat($._statement),
             choice('endfunction', 'end')
         ),
 
+        return_value: $ => choice($.identifier, $.ret_list),
+        ret_list: $ => seq('[', optional($.list_of_identifiers), ']'),
+        
         parameter_list: $ => seq(
             '(',
-            optional($.parameters),
+            optional($.list_of_identifiers),
             ')'
         ),
 
-        parameters: $ => seq(
+        list_of_identifiers: $ => seq(
             $.identifier,
             repeat(seq(',', $.identifier))
         ),
@@ -82,8 +88,14 @@ module.exports = grammar({
             $.number
         ),
 
-        identifier: $ => /[a-z]+/,
+        identifier: $ => /[a-zA-Z_][a-zA-Z0-9_]*/,
+        
+        number: $ => choice(
+            $.integer,
+            $.float
+        ),
 
-        number: $ => /\d+/
+        float : $ => choice(seq(/\d+/, '.', /\d+/), seq(/\d+/, '.'), seq('.', /\d+/)),
+        integer: $ => /\d+/
     }
 });
