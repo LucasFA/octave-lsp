@@ -83,7 +83,11 @@ impl VariableDef {
     }
 
     pub fn value(&self) -> Option<Expr> {
-        self.0.children().last().and_then(Expr::cast)
+        self.0
+            .children_with_tokens()
+            .filter_map(SyntaxElement::into_node)
+            .filter_map(Expr::cast)
+            .nth(1)
     }
 }
 
