@@ -88,14 +88,14 @@ impl TryFrom<u16> for SyntaxKind {
 
     fn try_from(value: u16) -> Result<Self, Self::Error> {
         if (value as usize) < TokenKind::COUNT {
-            let v = TokenKind::try_from(
+            TokenKind::try_from(
                 u8::try_from(value).expect("Tried to convert too big an integer into u8."),
-            );
-            v.map(SyntaxKind::LexToken)
-                .map_err(|_impossible| "Should not exist")
+            )
+            .map(SyntaxKind::LexToken)
+            .map_err(|_impossible| "Should not exist")
         } else {
-            let v = SyntaxConstruct::try_from(u8::try_from(value).expect("u16 value provided too big to convert to u8. Could not cast into u8 SyntaxConstruct"));
-            v.map(SyntaxKind::SyntaxConstruct)
+            SyntaxConstruct::try_from(u8::try_from(value).expect("u16 value provided too big to convert to u8. Could not cast into u8 SyntaxConstruct"))
+                .map(SyntaxKind::SyntaxConstruct)
                 .map_err(|_e| "u8 values should correspond to SyntaxConstruct variant. Found error")
         }
     }
