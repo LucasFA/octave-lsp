@@ -1,5 +1,6 @@
 //! Defines the equivalence from Lexical tokens to Syntactical tokens.
 #![warn(clippy::pedantic)]
+#![allow(clippy::cast_possible_truncation)]
 
 use std::fmt::Debug;
 
@@ -36,8 +37,8 @@ pub enum SyntaxKind {
 impl std::fmt::Debug for SyntaxKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::LexToken(token) => write!(f, "{:?}", token),
-            Self::SyntaxConstruct(construct) => write!(f, "{:?}", construct),
+            Self::LexToken(token) => write!(f, "{token:?}"),
+            Self::SyntaxConstruct(construct) => write!(f, "{construct:?}"),
         }
     }
 }
@@ -56,7 +57,8 @@ impl From<SyntaxConstruct> for SyntaxKind {
     }
 }
 
-const_assert!(TokenKind::COUNT <= u8::MAX as usize);
+const_assert!(TokenKind::COUNT <= (u8::MAX as usize));
+
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, IntoPrimitive, TryFromPrimitive,
 )]

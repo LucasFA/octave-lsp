@@ -71,6 +71,12 @@ impl Root {
 }
 
 impl VariableDef {
+    /// Returns the name of the defined variable.
+    ///
+    /// # Panics
+    ///
+    /// Panics if there is no variable reference in the variable definition,
+    /// which should never happen as that is necessary for the variable definition to be valid.
     pub fn name(&self) -> Option<SyntaxToken> {
         self.0
             .children_with_tokens()
@@ -82,6 +88,9 @@ impl VariableDef {
             .find(|token| token.kind() == TokenKind::Identifier.into())
     }
 
+    /// Returns the value of the defined variable.
+    ///
+    /// If the variable definition does not have a value, returns None.
     pub fn value(&self) -> Option<Expr> {
         self.0
             .children_with_tokens()
@@ -103,8 +112,7 @@ impl Expr {
                 SyntaxConstruct::PrefixExpr => Self::UnaryExpr(UnaryExpr(node)),
                 SyntaxConstruct::VariableRef => Self::VariableRef(VariableRef(node)),
                 SyntaxConstruct::Error => return None,
-                SyntaxConstruct::Root => unreachable!(),
-                SyntaxConstruct::VariableDef => unreachable!(),
+                SyntaxConstruct::Root | SyntaxConstruct::VariableDef => unreachable!(),
             };
         } else {
             return None;
@@ -160,6 +168,15 @@ impl ParenExpr {
 }
 
 impl Literal {
+    /// Returns the value of the literal as a u64
+    ///
+    /// # Panics
+    ///
+    /// Panics if there are no more tokens left
+    ///
+    /// # Errors
+    ///
+    /// Returns None if the token is not a valid u64
     #[must_use]
     pub fn parse(&self) -> Option<u64> {
         self.0.first_token().unwrap().text().parse().ok()
@@ -176,6 +193,11 @@ impl Literal {
 }
 
 impl VariableRef {
+    /// Returns the name of the variable
+    ///
+    /// # Errors
+    ///
+    /// Returns None if erronously called on a node that is not a variable reference
     #[must_use]
     pub fn name(&self) -> Option<SyntaxToken> {
         self.0.first_token()
