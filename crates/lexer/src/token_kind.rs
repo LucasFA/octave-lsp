@@ -169,9 +169,6 @@ pub enum TokenKind {
 
     #[error]
     Error,
-
-    #[doc(hidden)]
-    __LAST,
 }
 
 impl TokenKind {
@@ -449,7 +446,7 @@ mod tests {
     }
 
     // Test with full coverage. An error here would be hard to debug
-    fn to_kw_or_not_to_kw() -> ([TokenKind; 25], [TokenKind; 37]) {
+    fn to_kw_or_not_to_kw() -> ([TokenKind; 25], [TokenKind; 36]) {
         use crate::TokenKind::*;
         let keywords = [
             FnKw,
@@ -516,7 +513,6 @@ mod tests {
             RBrace,
             Comment,
             Error,
-            __LAST,
         ];
 
         let u: HashSet<TokenKind> = keywords.into_iter().chain(non_kw.into_iter()).collect();
