@@ -27,14 +27,14 @@ impl Database {
                 ast::Expr::Literal(ast) => Expr::Literal { n: ast.parse() },
                 ast::Expr::ParenExpr(ast) => self.lower_expr(ast.expr()),
                 ast::Expr::UnaryExpr(ast) => self.lower_unary(&ast),
-                ast::Expr::VariableRef(ast) => self.lower_variable_ref(&ast),
+                ast::Expr::VariableRef(ast) => Database::lower_variable_ref(&ast),
             }
         } else {
             Expr::Missing
         }
     }
 
-    fn lower_variable_ref(&mut self, ast: &ast::VariableRef) -> Expr {
+    fn lower_variable_ref(ast: &ast::VariableRef) -> Expr {
         Expr::VariableRef {
             var: ast.name().unwrap().text().into(),
         }
