@@ -41,11 +41,11 @@ impl_typed_syntax_node!(VariableDef);
 impl_typed_syntax_node!(Root);
 
 impl Root {
-    pub fn stmts(&self) -> impl Iterator<Item = Stmt> {
+    pub fn stmts(&self) -> impl Iterator<Item = Stmt> + use<> {
         self.0.children().filter_map(Stmt::cast)
     }
 
-    pub fn get_variable_definitions(&self) -> impl Iterator<Item = VariableDef> {
+    pub fn get_variable_definitions(&self) -> impl Iterator<Item = VariableDef> + use<> {
         self.stmts().filter_map(|stmt| {
             if let Stmt::VariableDef(var_def) = stmt {
                 Some(var_def)
