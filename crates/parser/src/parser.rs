@@ -89,7 +89,7 @@ impl<'t, 'input> Parser<'t, 'input> {
     }
 
     fn at_set(&mut self, set: &[TokenKind]) -> bool {
-        self.peek().map_or(false, |k| set.contains(&k))
+        self.peek().is_some_and(|k| set.contains(&k))
     }
 
     pub(crate) fn at_end(&mut self) -> bool {
