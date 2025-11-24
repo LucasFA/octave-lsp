@@ -14,7 +14,6 @@ use source::Source;
 use syntax::SyntaxNode;
 
 /// Actually parses the input into a tree of `SyntaxNode`s.
-
 #[must_use]
 pub fn parse(input: &str) -> Parse {
     let tokens: Vec<_> = Lexer::new(input).collect();
@@ -34,6 +33,7 @@ pub struct Parse {
 impl Parse {
     #[must_use]
     pub fn debug_tree(&self) -> String {
+        use std::fmt::Write as _; // import without risk of name clashing
         let mut s = String::new();
 
         let tree = format!("{:#?}", self.syntax());
@@ -41,7 +41,7 @@ impl Parse {
         // We cut off the last byte because formatting the SyntaxNode adds on a newline at the end.
         s.push_str(&tree[0..tree.len() - 1]);
         for error in &self.errors {
-            s.push_str(&format!("\n{error}"));
+            write!(s, "\n{error}").unwrap();
         }
 
         s
