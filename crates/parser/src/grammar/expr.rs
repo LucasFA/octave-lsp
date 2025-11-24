@@ -1,7 +1,7 @@
+use crate::parser::Parser;
 ///a Parsing of expressions.
 ///a This module contains the code for parsing __expressions__.
 use crate::parser::marker::CompletedMarker;
-use crate::parser::Parser;
 use lexer::TokenKind;
 use syntax::SyntaxConstruct;
 

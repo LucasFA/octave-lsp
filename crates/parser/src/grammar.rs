@@ -1,8 +1,8 @@
 mod expr;
 mod stmt;
 
-use crate::parser::marker::CompletedMarker;
 use crate::parser::Parser;
+use crate::parser::marker::CompletedMarker;
 use lexer::TokenKind;
 use syntax::SyntaxConstruct;
 use syntax::SyntaxKind;

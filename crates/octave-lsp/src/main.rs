@@ -29,14 +29,15 @@ fn main() -> io::Result<()> {
 
         let root: ast::Root = ast::TypedSyntaxNode::cast(parse.syntax()).unwrap();
 
-        dbg!(root
-            .stmts()
-            .filter_map(|stmt| if let ast::Stmt::VariableDef(var_def) = stmt {
-                Some(var_def.value())
-            } else {
-                None
-            })
-            .collect::<Vec<_>>());
+        dbg!(
+            root.stmts()
+                .filter_map(|stmt| if let ast::Stmt::VariableDef(var_def) = stmt {
+                    Some(var_def.value())
+                } else {
+                    None
+                })
+                .collect::<Vec<_>>()
+        );
 
         dbg!(hir::lower(&root));
 

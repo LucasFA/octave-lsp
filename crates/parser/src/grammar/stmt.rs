@@ -1,6 +1,6 @@
 use syntax::SyntaxConstruct;
 
-use super::{expr, CompletedMarker, Parser, TokenKind};
+use super::{CompletedMarker, Parser, TokenKind, expr};
 
 pub(super) fn stmt(p: &mut Parser) -> Option<CompletedMarker> {
     if p.at(TokenKind::Identifier) {
