@@ -11,5 +11,3 @@ ast = {path = "../ast"}
 hir = {path = "../hir"}
 parser = {path = "../parser"}
 
-[dev-dependencies]
-rusty-hook = "^0.11.2" # Enforces cargo fmt throughout the project (beyond this crate!)

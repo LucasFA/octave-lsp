@@ -8,7 +8,7 @@ publish = false
 
 [dependencies]
 la-arena = "0.3.0"
-smol_str = "0.2.0"
+smol_str = "0.3.4"
 ast = {path = "../ast"}
 syntax = {path = "../syntax"}
 
