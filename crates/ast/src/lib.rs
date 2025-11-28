@@ -259,13 +259,13 @@ mod tests {
     #[test]
     fn get_variable_defs() {
         let input = r#"a = 12;
-b = a - 1"
+b = a - 1
 c = a * b"#;
         let root = get_root(input);
         let v: Vec<_> = root.get_variable_definitions().collect();
         let output = format!("{v:?}");
         let expected_output = expect![
-            "[VariableDef(VariableDef@0..8), VariableDef(VariableDef@8..17), VariableDef(VariableDef@19..28)]"
+            "[VariableDef(VariableDef@0..8), VariableDef(VariableDef@8..18), VariableDef(VariableDef@18..27)]"
         ];
 
         expected_output.assert_eq(&output);
@@ -280,9 +280,9 @@ b = a - 1"#;
         let v = root.get_variable_references();
 
         let output = format!("{v:?}");
-        let expected_output = expect![
+        let expected_output = expect![[
             "[VariableRef(VariableRef@0..2), VariableRef(VariableRef@8..10), VariableRef(VariableRef@14..16), VariableRef(VariableRef@18..20)]"
-        ];
+        ]];
 
         expected_output.assert_eq(&output);
     }
