@@ -166,9 +166,6 @@ pub enum TokenKind {
     #[regex(r"\d+")] // Integers
     #[regex(r"\d*\.\d*")] // Floats
     Number,
-
-    #[error]
-    Error,
 }
 
 impl TokenKind {
@@ -199,7 +196,6 @@ impl fmt::Display for TokenKind {
             Self::LBrace => "'{'",
             Self::RBrace => "'}'",
             Self::Comment => "comment",
-            Self::Error => "an unrecognized token",
             Self::Semicolon => "';'",
             _ => todo!("Not yet implemented fmt::Display for TokenKind variant"),
         })
@@ -446,7 +442,7 @@ mod tests {
     }
 
     // Test with full coverage. An error here would be hard to debug
-    fn to_kw_or_not_to_kw() -> ([TokenKind; 25], [TokenKind; 36]) {
+    fn to_kw_or_not_to_kw() -> ([TokenKind; 25], [TokenKind; 35]) {
         use crate::TokenKind::*;
         let keywords = [
             FnKw,
@@ -512,7 +508,6 @@ mod tests {
             LBrace,
             RBrace,
             Comment,
-            Error,
         ];
 
         let u: HashSet<TokenKind> = keywords.into_iter().chain(non_kw.into_iter()).collect();

@@ -39,6 +39,10 @@ impl<'a> Iterator for Lexer<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let kind = self.inner.next()?;
+        if kind.is_err() {
+            println!("Here");
+            return None;
+        }
         let text = self.inner.slice();
 
         let range = {
@@ -49,6 +53,10 @@ impl<'a> Iterator for Lexer<'a> {
             TextRange::new(start, end)
         };
 
-        Some(Self::Item { kind, text, range })
+        Some(Self::Item {
+            kind: kind.expect("Unexpected None failure #1 at lexer/src/lib.rs"),
+            text,
+            range,
+        })
     }
 }
