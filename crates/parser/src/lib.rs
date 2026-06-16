@@ -6,7 +6,8 @@ mod parser;
 mod sink;
 mod source;
 
-use crate::parser::{ParseError, Parser};
+use crate::parser::Parser;
+pub use crate::parser::ParseError;
 use lexer::Lexer;
 use rowan::GreenNode;
 use sink::Sink;
@@ -50,6 +51,11 @@ impl Parse {
     #[must_use]
     pub fn syntax(&self) -> SyntaxNode {
         SyntaxNode::new_root(self.green_node.clone())
+    }
+
+    #[must_use]
+    pub fn errors(&self) -> &[ParseError] {
+        &self.errors
     }
 }
 

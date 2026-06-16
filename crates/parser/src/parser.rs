@@ -1,7 +1,7 @@
 pub(crate) mod marker;
 
 mod parse_error;
-pub(crate) use parse_error::ParseError;
+pub use parse_error::ParseError;
 
 use crate::event::Event;
 use crate::grammar;

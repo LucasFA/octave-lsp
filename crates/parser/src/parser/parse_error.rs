@@ -3,10 +3,10 @@ use std::fmt;
 use text_size::TextRange;
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct ParseError {
+pub struct ParseError {
     pub(super) expected: Vec<TokenKind>,
     pub(super) found: Option<TokenKind>,
-    pub(super) range: TextRange,
+    pub range: TextRange,
 }
 
 impl fmt::Display for ParseError {
