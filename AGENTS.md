@@ -59,8 +59,59 @@ cargo fuzz run main -- -max_len=64
 
 ## VS Code extension
 
-`editors/code/` — TypeScript, not yet published.  
-Uses `vscode-languageclient`. Entry: `./out/extension`.
+`editors/code/` — TypeScript LSP client. Not yet published. The Rust binary
+(`octave-lsp`) is the server; the extension is the client that wires it into VS Code.
+
+### Current state (incomplete / outdated)
+
+| File | Issue |
+|---|---|
+| `package.json` | Deps pinned to old versions: `vscode-languageclient ^8.0.2` (2022), `@types/node ^7.10.14` (2017), `typescript ^4.9.3`. No `scripts.build`/`scripts.watch`/`scripts.test`. `contributes: {}` is empty — no language registration, no grammar, no config schema. |
+| `src/Ctx.ts` | Hardcoded server path `<extPath>/server/target/debug/octave-lsp-server[.exe]`. Wrong on two counts: the real binary name is `octave-lsp`, and the actual build output is `target/debug/octave-lsp` (one `target/` deep from the repo root, not nested under `server/`). Debug args `["--debug", "--inspect=6009"]` are unverified against the current server. |
+| `src/Config.ts` | Wrapper exists but is unused — no settings registered under the `octave-lsp` namespace. |
+| `tslint.json` | TSLint is archived/deprecated; the `tslint:recommended` ruleset has not been updated since 2019. |
+| `out/` | Not built; not in `.gitignore`. |
+| `.vscodeignore` | Missing. Without it, `vsce package` would ship `node_modules/`, `src/`, `tsconfig.json`, `tslint.json`, and `*.map` files into the `.vsix`. |
+
+### Work plan
+
+**Phase 1 — make the existing code build and load.**
+- Add build scripts to `package.json`: `build: tsc -p .`, `watch: tsc -watch -p .`, `typecheck: tsc --noEmit`.
+- Add `editors/code/.gitignore` for `out/` and `node_modules/`.
+- Add `editors/code/.vscodeignore` mirroring the rust-analyzer pattern (exclude everything, re-include the bundle, the prebuilt server dir, `package.json`, `LICENSE`, `icon.png`).
+- Update `@types/node` to `^20` and `typescript` to `^5.x` to match the Node version VS Code ships.
+- Drop `tslint.json`; add `eslint` + `@typescript-eslint` and an `eslint.config.mjs`.
+
+**Phase 2 — register the language and the server.**
+- In `package.json` `contributes`:
+  - `languages`: `{ id: "octave", extensions: [".m", ".octave-config"], aliases: ["Octave", "octave"] }`
+  - `language-configuration`: comment markers (`#`, `%`), brackets, indentation rules, word patterns.
+  - `configuration`: settings schema for `octave-lsp.server.path`, `octave-lsp.trace.server`.
+- Fix `src/Ctx.ts` to:
+  - Resolve the server path from `octave-lsp.server.path` setting, defaulting to `<extPath>/server/octave-lsp[.exe]` (matches the bundled path used by rust-analyzer's `server/` dir).
+  - Use the correct binary name and platform suffix.
+  - Drop the stale `--debug --inspect=6009` flags (or wire them behind a real debug build).
+
+**Phase 3 — ship the server binary with the extension.**
+- Add a release task to the repo's CI (or a separate workflow) that builds the `octave-lsp` binary for `x86_64-unknown-linux-gnu`, `x86_64-apple-darwin` (universal), and `x86_64-pc-windows-msvc`, then copies them into `editors/code/server/<target>/octave-lsp[.exe]`.
+- The extension's `Ctx.ts` picks the right binary at runtime based on `process.platform` / `process.arch`.
+- For local development, override via `octave-lsp.server.path` setting pointing at `target/debug/octave-lsp`.
+
+**Phase 4 — publish.**
+- `vsce package` produces `octave-lsp-X.Y.Z.vsix` for direct install.
+- `vsce publish` (or web upload) ships the same bundle to the marketplace.
+- Add a `package.json` `scripts.package: "vsce package"` and `scripts.publish: "vsce publish"`.
+- Add a `repository` and `license` field if missing (already present).
+
+**Phase 5 — CI integration.**
+- Extend `.github/workflows/rust.yml` (or add a separate `vscode.yml`) to:
+  - Install Node 20.
+  - `npm ci` and `npm run typecheck` on every PR.
+  - (Optional) Build the `octave-lsp` release binary for linux and stash as an artifact for `.vsix` smoke testing.
+
+### Distribution model
+
+Mirrors rust-analyzer: ship a prebuilt server binary per platform inside the `.vsix` under `editors/code/server/`. No download-on-activation, no user-side `cargo install`. Users get a single-install experience from the marketplace.
 
 ## Lint attributes
 
@@ -69,8 +120,14 @@ All crates use `#![warn(clippy::pedantic)]`.
 
 ## Current state
 
-Work in progress. Not all Octave syntax is parsed. No LSP protocol implemented yet
-(the binary is a REPL that reads lines, parses, validates, and prints the debug tree).
+- **LSP server implemented** in `crates/octave-lsp/src/server.rs` (lsp-server + lsp-types).
+  Default mode is the LSP server on stdio; pass `--repl` for the REPL.
+  Capabilities: full text-document sync, parser + AST validation diagnostics published
+  via `textDocument/publishDiagnostics`.
+- **Parser/HIR/AST** cover Octave expressions, control flow, function definitions,
+  try/catch, unwind_protect, strings, and postfix transpose.
+- **174 tests pass**, clippy clean (`-D warnings`).
+- **VS Code extension** in `editors/code/` is a stub — see the work plan below.
 
 ## Test-first workflow
 
@@ -98,10 +155,10 @@ inspects the operator token kind to classify (`Expr::BinaryExpr` vs future
 
 ## Notable gotchas
 
-- **`SyntaxConstruct::VariableDef` is dead code** from the parser side since
-  assignment uses `InfixExpr` with `=` operator. The AST layer still accepts it
-  in `VariableDef::cast()` for backward compat, but the parser no longer emits it.
-  Consider removing `SyntaxConstruct::VariableDef` once downstream code is updated.
+- `ast::Stmt::VariableDef` still exists as a wrapper, but it's only constructed
+  for `InfixExpr`-with-`=` nodes that have a `VariableRef` LHS. Assignments with
+  a non-`VariableRef` LHS (e.g. `1 = 2`) return `None` from `VariableDef::name()`
+  to avoid panics. The parser never emits a dedicated `SyntaxConstruct::VariableDef`.
 
 ---
 
