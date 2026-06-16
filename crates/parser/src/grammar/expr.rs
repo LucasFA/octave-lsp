@@ -180,6 +180,36 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) -> Option<Compl
             continue;
         }
 
+        // Function call / indexing: expr(args)
+        if p.at(TokenKind::LParen) {
+            let m = lhs.precede(p);
+            p.bump();
+            loop {
+                if p.at(TokenKind::RParen) {
+                    p.bump();
+                    break;
+                }
+                if p.at_end() {
+                    break;
+                }
+                // Parse argument expression
+                expr(p);
+                if p.at(TokenKind::Comma) {
+                    p.bump();
+                    continue;
+                }
+                if p.at(TokenKind::RParen) {
+                    p.bump();
+                    break;
+                }
+                // Unexpected token — error recovery
+                p.error();
+                break;
+            }
+            lhs = m.complete(p, SyntaxConstruct::CallExpr.into());
+            continue;
+        }
+
         let op = if p.at(TokenKind::Plus) {
             BinaryOp::Add
         } else if p.at(TokenKind::Minus) {
@@ -516,7 +546,7 @@ Root@0..19
                     LParen@0..1 "("
                     VariableRef@1..4
                       Identifier@1..4 "foo"
-                error at 1..4: expected '', '.'', '+', '-', '*', '/', '.*', './', '\', '.\\!, '^', '.^', '==', '!=', '<', '>', '<=', '>=', '~=', '&&', '||', ':', '=' or ')'"#]],
+                error at 1..4: expected '', '.'', '(', '+', '-', '*', '/', '.*', './', '\', '.\\!, '^', '.^', '==', '!=', '<', '>', '<=', '>=', '~=', '&&', '||', ':', '=' or ')'"#]],
         );
     }
 
@@ -759,15 +789,95 @@ Root@0..3
     #[test]
     fn parse_matrix_two_rows() {
         check("[1; 2]", expect![[r#"
-            Root@0..6
-              MatrixExpr@0..6
-                LBracket@0..1 "["
-                Literal@1..2
-                  Number@1..2 "1"
-                Semicolon@2..3 ";"
-                Whitespace@3..4 " "
-                Literal@4..5
-                  Number@4..5 "2"
-                RBracket@5..6 "]""#]]);
+Root@0..6
+  MatrixExpr@0..6
+    LBracket@0..1 "["
+    Literal@1..2
+      Number@1..2 "1"
+    Semicolon@2..3 ";"
+    Whitespace@3..4 " "
+    Literal@4..5
+      Number@4..5 "2"
+    RBracket@5..6 "]""#]]);
+    }
+
+    #[test]
+    fn parse_call_no_args() {
+        check("f()", expect![[r#"
+Root@0..3
+  CallExpr@0..3
+    VariableRef@0..1
+      Identifier@0..1 "f"
+    LParen@1..2 "("
+    RParen@2..3 ")""#]]);
+    }
+
+    #[test]
+    fn parse_call_one_arg() {
+        check("f(1)", expect![[r#"
+Root@0..4
+  CallExpr@0..4
+    VariableRef@0..1
+      Identifier@0..1 "f"
+    LParen@1..2 "("
+    Literal@2..3
+      Number@2..3 "1"
+    RParen@3..4 ")""#]]);
+    }
+
+    #[test]
+    fn parse_call_two_args() {
+        check("f(1, 2)", expect![[r#"
+Root@0..7
+  CallExpr@0..7
+    VariableRef@0..1
+      Identifier@0..1 "f"
+    LParen@1..2 "("
+    Literal@2..3
+      Number@2..3 "1"
+    Comma@3..4 ","
+    Whitespace@4..5 " "
+    Literal@5..6
+      Number@5..6 "2"
+    RParen@6..7 ")""#]]);
+    }
+
+    #[test]
+    fn parse_nested_calls() {
+        check("f(g(1))", expect![[r#"
+            Root@0..7
+              CallExpr@0..7
+                VariableRef@0..1
+                  Identifier@0..1 "f"
+                LParen@1..2 "("
+                CallExpr@2..6
+                  VariableRef@2..3
+                    Identifier@2..3 "g"
+                  LParen@3..4 "("
+                  Literal@4..5
+                    Number@4..5 "1"
+                  RParen@5..6 ")"
+                RParen@6..7 ")""#]]);
+    }
+
+    #[test]
+    fn parse_expression_followed_by_parens_is_not_call() {
+        // (1+2)(3) — LHS is a ParenExpr, then parenthesized args
+        check("(1+2)(3)", expect![[r#"
+            Root@0..8
+              CallExpr@0..8
+                ParenExpr@0..5
+                  LParen@0..1 "("
+                  InfixExpr@1..4
+                    Literal@1..2
+                      Number@1..2 "1"
+                    Plus@2..3 "+"
+                    Literal@3..4
+                      Number@3..4 "2"
+                  RParen@4..5 ")"
+                LParen@5..6 "("
+                Literal@6..7
+                  Number@6..7 "3"
+                RParen@7..8 ")""#]]);
     }
 }
