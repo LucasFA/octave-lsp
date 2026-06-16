@@ -638,6 +638,26 @@ Root@0..5
     }
 
     #[test]
+    fn parse_assignment_right_assoc() {
+        check("a = b = c", expect![[r#"
+Root@0..9
+  InfixExpr@0..9
+    VariableRef@0..2
+      Identifier@0..1 "a"
+      Whitespace@1..2 " "
+    Equals@2..3 "="
+    Whitespace@3..4 " "
+    InfixExpr@4..9
+      VariableRef@4..6
+        Identifier@4..5 "b"
+        Whitespace@5..6 " "
+      Equals@6..7 "="
+      Whitespace@7..8 " "
+      VariableRef@8..9
+        Identifier@8..9 "c""#]]);
+    }
+
+    #[test]
     fn parse_equality() {
         check("1 == 2", expect![[r#"
 Root@0..6

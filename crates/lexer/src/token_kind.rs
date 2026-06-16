@@ -411,6 +411,16 @@ mod tests {
     }
 
     #[test]
+    fn lex_transpose() {
+        check("'", TokenKind::Transpose);
+    }
+
+    #[test]
+    fn lex_elmt_transpose() {
+        check(".'", TokenKind::ElmtTranspose);
+    }
+
+    #[test]
     fn lex_equals() {
         check("=", TokenKind::Equals);
     }
