@@ -106,18 +106,12 @@ impl Root {
 }
 
 impl VariableDef {
-    /// Returns the name of the defined variable.
-    ///
-    /// # Panics
-    ///
-    /// Panics if there is no variable reference in the variable definition,
-    /// which should never happen as that is necessary for the variable definition to be valid.
+    /// Returns the name of the defined variable, or None if the LHS is not a `VariableRef`.
     pub fn name(&self) -> Option<SyntaxToken> {
         self.0
             .children_with_tokens()
             .filter_map(SyntaxElement::into_node)
-            .find(|node| node.kind() == SyntaxConstruct::VariableRef.into())
-            .unwrap()
+            .find(|node| node.kind() == SyntaxConstruct::VariableRef.into())?
             .children_with_tokens()
             .filter_map(SyntaxElement::into_token)
             .find(|token| token.kind() == TokenKind::Identifier.into())

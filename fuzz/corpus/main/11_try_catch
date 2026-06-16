@@ -1,0 +1,2 @@
+try x=1 catch y=2 end_try_catch
+unwind_protect x=1 unwind_protect_cleanup x=2 end_unwind_protect

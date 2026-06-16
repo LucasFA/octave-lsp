@@ -1,0 +1,7 @@
+if 1 a endif
+if x y else z endif
+for i=1:10 x endfor
+while 1 x endwhile
+switch x case 1 y endswitch
+break
+continue
