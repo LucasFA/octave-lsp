@@ -113,6 +113,7 @@ impl Expr {
                 SyntaxConstruct::VariableRef => Self::VariableRef(VariableRef(node)),
                 SyntaxConstruct::Error => return None,
                 SyntaxConstruct::Root | SyntaxConstruct::VariableDef => unreachable!(),
+                _ => return None,
             };
         } else {
             return None;

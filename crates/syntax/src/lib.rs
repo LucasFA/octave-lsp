@@ -73,6 +73,17 @@ pub enum SyntaxConstruct {
     Literal,
     VariableRef,
     VariableDef,
+    MatrixExpr,
+    CallExpr,
+    PostfixExpr,
+    RangeExpr,
+    Block,
+    FnDef,
+    IfStmt,
+    ForLoop,
+    WhileLoop,
+    BreakStmt,
+    ContinueStmt,
 }
 
 impl From<SyntaxKind> for u16 {
