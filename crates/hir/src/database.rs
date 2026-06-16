@@ -15,6 +15,13 @@ impl Database {
                 value: self.lower_expr(ast.value()),
             },
             ast::Stmt::Expr(ast) => Stmt::Expr(self.lower_expr(Some(ast))),
+            ast::Stmt::FnDef(_)
+            | ast::Stmt::IfStmt(_)
+            | ast::Stmt::ForLoop(_)
+            | ast::Stmt::WhileLoop(_)
+            | ast::Stmt::BreakStmt(_)
+            | ast::Stmt::ContinueStmt(_)
+            | ast::Stmt::SwitchStmt(_) => return None,
         };
 
         Some(result)
@@ -28,6 +35,10 @@ impl Database {
                 ast::Expr::ParenExpr(ast) => self.lower_expr(ast.expr()),
                 ast::Expr::UnaryExpr(ast) => self.lower_unary(&ast),
                 ast::Expr::VariableRef(ast) => Database::lower_variable_ref(&ast),
+                ast::Expr::MatrixExpr(_)
+                | ast::Expr::CallExpr(_)
+                | ast::Expr::PostfixExpr(_)
+                | ast::Expr::RangeExpr(_) => Expr::Missing,
             }
         } else {
             Expr::Missing

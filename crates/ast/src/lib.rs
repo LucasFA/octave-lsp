@@ -13,6 +13,7 @@ pub trait TypedSyntaxNode {
 mod macros {
     macro_rules! impl_typed_syntax_node {
         ($struct_name:ident) => {
+            #[allow(dead_code)]
             #[derive(Debug)]
             pub struct $struct_name(SyntaxNode);
             impl TypedSyntaxNode for $struct_name {
@@ -38,6 +39,17 @@ mod macros {
 
 impl_typed_syntax_node!(VariableRef);
 impl_typed_syntax_node!(Root);
+impl_typed_syntax_node!(MatrixExpr);
+impl_typed_syntax_node!(CallExpr);
+impl_typed_syntax_node!(PostfixExpr);
+impl_typed_syntax_node!(RangeExpr);
+impl_typed_syntax_node!(FnDef);
+impl_typed_syntax_node!(IfStmt);
+impl_typed_syntax_node!(ForLoop);
+impl_typed_syntax_node!(WhileLoop);
+impl_typed_syntax_node!(BreakStmt);
+impl_typed_syntax_node!(ContinueStmt);
+impl_typed_syntax_node!(SwitchStmt);
 
 #[derive(Debug)]
 pub struct VariableDef(SyntaxNode);
@@ -138,11 +150,11 @@ impl Expr {
                 SyntaxConstruct::ParenExpr => Self::ParenExpr(ParenExpr(node)),
                 SyntaxConstruct::PrefixExpr => Self::UnaryExpr(UnaryExpr(node)),
                 SyntaxConstruct::VariableRef => Self::VariableRef(VariableRef(node)),
+                SyntaxConstruct::MatrixExpr => Self::MatrixExpr(MatrixExpr(node)),
+                SyntaxConstruct::CallExpr => Self::CallExpr(CallExpr(node)),
+                SyntaxConstruct::PostfixExpr => Self::PostfixExpr(PostfixExpr(node)),
+                SyntaxConstruct::RangeExpr => Self::RangeExpr(RangeExpr(node)),
                 SyntaxConstruct::Root | SyntaxConstruct::VariableDef => unreachable!(),
-                SyntaxConstruct::MatrixExpr
-                | SyntaxConstruct::CallExpr
-                | SyntaxConstruct::PostfixExpr
-                | SyntaxConstruct::RangeExpr => todo!(),
                 SyntaxConstruct::Error
                 | SyntaxConstruct::Block
                 | SyntaxConstruct::FnDef
@@ -243,9 +255,40 @@ impl VariableRef {
     }
 }
 
+impl CallExpr {
+    #[must_use]
+    pub fn func(&self) -> Option<Expr> {
+        self.0.children().find_map(Expr::cast)
+    }
+
+    pub fn args(&self) -> impl Iterator<Item = Expr> {
+        self.0.children().filter_map(Expr::cast).skip(1)
+    }
+}
+
+impl PostfixExpr {
+    #[must_use]
+    pub fn expr(&self) -> Option<Expr> {
+        self.0.children().find_map(Expr::cast)
+    }
+}
+
+impl FnDef {
+    pub fn body(&self) -> impl Iterator<Item = Stmt> {
+        self.0.children().filter_map(Stmt::cast).skip(1)
+    }
+}
+
 #[derive(Debug)]
 pub enum Stmt {
     VariableDef(VariableDef),
+    FnDef(FnDef),
+    IfStmt(IfStmt),
+    ForLoop(ForLoop),
+    WhileLoop(WhileLoop),
+    BreakStmt(BreakStmt),
+    ContinueStmt(ContinueStmt),
+    SwitchStmt(SwitchStmt),
     Expr(Expr),
 }
 
@@ -255,7 +298,17 @@ impl Stmt {
         if let Some(var_def) = VariableDef::cast(node.clone()) {
             return Some(Self::VariableDef(var_def));
         }
-        Some(Self::Expr(Expr::cast(node)?))
+        let result = match node.kind() {
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::FnDef) => Self::FnDef(FnDef(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::IfStmt) => Self::IfStmt(IfStmt(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::ForLoop) => Self::ForLoop(ForLoop(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::WhileLoop) => Self::WhileLoop(WhileLoop(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::BreakStmt) => Self::BreakStmt(BreakStmt(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::ContinueStmt) => Self::ContinueStmt(ContinueStmt(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::SwitchStmt) => Self::SwitchStmt(SwitchStmt(node)),
+            _ => Self::Expr(Expr::cast(node)?),
+        };
+        Some(result)
     }
 }
 
@@ -266,6 +319,10 @@ pub enum Expr {
     ParenExpr(ParenExpr),
     UnaryExpr(UnaryExpr),
     VariableRef(VariableRef),
+    MatrixExpr(MatrixExpr),
+    CallExpr(CallExpr),
+    PostfixExpr(PostfixExpr),
+    RangeExpr(RangeExpr),
 }
 
 #[derive(Debug)]
