@@ -75,6 +75,7 @@ pub enum SyntaxConstruct {
     MatrixExpr,
     CallExpr,
     PostfixExpr,
+    StringLiteral,
     Block,
     FnDef,
     IfStmt,

@@ -51,6 +51,7 @@ impl_typed_syntax_node!(ContinueStmt);
 impl_typed_syntax_node!(SwitchStmt);
 impl_typed_syntax_node!(TryStmt);
 impl_typed_syntax_node!(UnwindProtectStmt);
+impl_typed_syntax_node!(StringLiteral);
 
 #[derive(Debug)]
 pub struct VariableDef(SyntaxNode);
@@ -143,6 +144,7 @@ impl Expr {
                 SyntaxConstruct::MatrixExpr => Self::MatrixExpr(MatrixExpr(node)),
                 SyntaxConstruct::CallExpr => Self::CallExpr(CallExpr(node)),
                 SyntaxConstruct::PostfixExpr => Self::PostfixExpr(PostfixExpr(node)),
+                SyntaxConstruct::StringLiteral => Self::StringLiteral(StringLiteral(node)),
                 SyntaxConstruct::Root => unreachable!(),
                 SyntaxConstruct::Error
                 | SyntaxConstruct::Block
@@ -314,6 +316,36 @@ impl PostfixExpr {
     }
 }
 
+impl StringLiteral {
+    /// Returns the string value, handling `''` escapes.
+    #[must_use]
+    pub fn value(&self) -> String {
+        let mut result = String::new();
+        let mut tokens = self
+            .0
+            .children_with_tokens()
+            .filter_map(SyntaxElement::into_token)
+            .skip(1) // skip opening '
+            .peekable();
+
+        while let Some(token) = tokens.next() {
+            if token.kind() == SyntaxKind::LexToken(TokenKind::Transpose) {
+                if tokens
+                    .peek()
+                    .is_some_and(|t| t.kind() == SyntaxKind::LexToken(TokenKind::Transpose))
+                {
+                    result.push('\'');
+                    let _ = tokens.next(); // skip second '
+                    continue;
+                }
+                break; // closing '
+            }
+            result.push_str(token.text());
+        }
+        result
+    }
+}
+
 impl FnDef {
     pub fn body(&self) -> impl Iterator<Item = Stmt> {
         self.0.children().filter_map(Stmt::cast).skip(1)
@@ -424,6 +456,7 @@ pub enum Expr {
     MatrixExpr(MatrixExpr),
     CallExpr(CallExpr),
     PostfixExpr(PostfixExpr),
+    StringLiteral(StringLiteral),
 }
 
 #[derive(Debug)]

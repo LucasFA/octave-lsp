@@ -143,6 +143,29 @@ fn matrix_expr(p: &mut Parser) -> CompletedMarker {
     m.complete(p, SyntaxConstruct::MatrixExpr.into())
 }
 
+fn string_literal(p: &mut Parser) -> CompletedMarker {
+    let m = p.start();
+    p.bump(); // opening '
+
+    loop {
+        if p.at(TokenKind::Transpose) {
+            p.bump();
+            // '' inside string = escaped literal quote
+            if p.at(TokenKind::Transpose) {
+                p.bump();
+                continue;
+            }
+            break; // closing '
+        }
+        if p.at_end() {
+            break; // unclosed string
+        }
+        p.bump(); // any token → string content
+    }
+
+    m.complete(p, SyntaxConstruct::StringLiteral.into())
+}
+
 fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
     let cm = if p.at(TokenKind::Number) {
         literal(p)
@@ -156,6 +179,8 @@ fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
         paren_expr(p)
     } else if p.at(TokenKind::LBracket) {
         matrix_expr(p)
+    } else if p.at(TokenKind::Transpose) {
+        string_literal(p)
     } else if let Some(TokenKind::Semicolon) = p.peek() {
         // Finished expression succesfully
         p.bump();
@@ -574,7 +599,7 @@ Root@0..19
                       Literal@1..2
                         Number@1..2 "1"
                       Plus@2..3 "+"
-                error at 2..3: expected number, identifier, '-', '+', '!', '~', '(' or '['
+                error at 2..3: expected number, identifier, '-', '+', '!', '~', '(', '[' or ''
                 error at 2..3: expected ')'"#]],
         );
     }
@@ -899,5 +924,65 @@ Root@0..7
                 Literal@6..7
                   Number@6..7 "3"
                 RParen@7..8 ")""#]]);
+    }
+
+    #[test]
+    fn parse_string_literal() {
+        check("'hello'", expect![[r#"
+Root@0..7
+  StringLiteral@0..7
+    Transpose@0..1 "'"
+    Identifier@1..6 "hello"
+    Transpose@6..7 "'""#]]);
+    }
+
+    #[test]
+    fn parse_string_empty() {
+        check("''", expect![[r#"
+Root@0..2
+  StringLiteral@0..2
+    Transpose@0..1 "'"
+    Transpose@1..2 "'""#]]);
+    }
+
+    #[test]
+    fn parse_string_escaped_quote() {
+        check("'it''s'", expect![[r#"
+            Root@0..7
+              StringLiteral@0..7
+                Transpose@0..1 "'"
+                Identifier@1..3 "it"
+                Transpose@3..4 "'"
+                Transpose@4..5 "'"
+                Identifier@5..6 "s"
+                Transpose@6..7 "'""#]]);
+    }
+
+    #[test]
+    fn parse_string_unclosed() {
+        check("'hello", expect![[r#"
+Root@0..6
+  StringLiteral@0..6
+    Transpose@0..1 "'"
+    Identifier@1..6 "hello""#]]);
+    }
+
+    #[test]
+    fn parse_string_in_matrix() {
+        check("['a', 'b']", expect![[r#"
+Root@0..10
+  MatrixExpr@0..10
+    LBracket@0..1 "["
+    StringLiteral@1..4
+      Transpose@1..2 "'"
+      Identifier@2..3 "a"
+      Transpose@3..4 "'"
+    Comma@4..5 ","
+    Whitespace@5..6 " "
+    StringLiteral@6..9
+      Transpose@6..7 "'"
+      Identifier@7..8 "b"
+      Transpose@8..9 "'"
+    RBracket@9..10 "]""#]]);
     }
 }

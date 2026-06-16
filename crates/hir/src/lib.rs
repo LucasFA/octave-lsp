@@ -56,6 +56,9 @@ pub enum Expr {
         op: TransposeOp,
         expr: ExprIdx,
     },
+    String {
+        value: SmolStr,
+    },
 }
 
 #[derive(Debug, PartialEq)]

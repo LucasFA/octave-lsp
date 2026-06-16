@@ -68,6 +68,7 @@ impl Database {
                 ast::Expr::MatrixExpr(ast) => self.lower_matrix(&ast),
                 ast::Expr::CallExpr(ast) => self.lower_call(&ast),
                 ast::Expr::PostfixExpr(ast) => self.lower_postfix(&ast),
+                ast::Expr::StringLiteral(ast) => Expr::String { value: ast.value().into() },
             }
         } else {
             Expr::Missing
@@ -544,6 +545,39 @@ mod tests {
                 ],
                 cleanup: vec![],
             },
+        );
+    }
+
+    #[test]
+    fn lower_string_literal() {
+        check_expr(
+            "'hello'",
+            Expr::String {
+                value: "hello".into(),
+            },
+            Database::default(),
+        );
+    }
+
+    #[test]
+    fn lower_string_empty() {
+        check_expr(
+            "''",
+            Expr::String {
+                value: "".into(),
+            },
+            Database::default(),
+        );
+    }
+
+    #[test]
+    fn lower_string_escaped_quote() {
+        check_expr(
+            "'it''s'",
+            Expr::String {
+                value: "it's".into(),
+            },
+            Database::default(),
         );
     }
 }
