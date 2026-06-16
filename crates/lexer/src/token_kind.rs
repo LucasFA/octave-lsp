@@ -122,6 +122,12 @@ pub enum TokenKind {
     ElmtTranspose,
     #[token("!")]
     Not,
+    #[token("~=")]
+    TildeEquals,
+    #[token("~")]
+    Tilde,
+    #[token("@")]
+    At,
     #[token("&&")]
     And,
     #[token("||")]
@@ -141,8 +147,27 @@ pub enum TokenKind {
     #[token("=")]
     Equals,
 
+    // Compound assignment
+    #[token("+=")]
+    PlusEquals,
+    #[token("-=")]
+    MinusEquals,
+    #[token("*=")]
+    AsteriskEquals,
+    #[token("/=")]
+    SlashEquals,
+    #[token(".*=")]
+    ElmtMultEquals,
+    #[token("./=")]
+    ElmtDivEquals,
+    #[token(".^=")]
+    ElmtPowEquals,
+
     #[token(":")]
     Colon,
+
+    #[token(",")]
+    Comma,
 
     #[token("{")]
     LBrace,
@@ -162,9 +187,9 @@ pub enum TokenKind {
     // The name of a variable must be a sequence of letters, digits and underscores, but it may not begin with a digit.
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*")]
     Identifier,
-    // A number is a sequence of digits, possibly containing a decimal point.
-    #[regex(r"\d+")] // Integers
-    #[regex(r"\d*\.\d*")] // Floats
+    // A number is a sequence of digits, possibly containing a decimal point
+    // and an exponent part. Neither a bare dot nor empty patterns match.
+    #[regex(r"\d+(\.\d*)?([eE][+-]?\d+)?|\.\d+([eE][+-]?\d+)?")]
     Number,
 }
 
@@ -197,6 +222,18 @@ impl fmt::Display for TokenKind {
             Self::RBrace => "'}'",
             Self::Comment => "comment",
             Self::Semicolon => "';'",
+            Self::Colon => "':'",
+            Self::Comma => "','",
+            Self::Tilde => "'~'",
+            Self::TildeEquals => "'~='",
+            Self::At => "'@'",
+            Self::PlusEquals => "'+='",
+            Self::MinusEquals => "'-='",
+            Self::AsteriskEquals => "'*='",
+            Self::SlashEquals => "'/='",
+            Self::ElmtMultEquals => "'.*='",
+            Self::ElmtDivEquals => "'./='",
+            Self::ElmtPowEquals => "'.^='",
             _ => todo!("Not yet implemented fmt::Display for TokenKind variant"),
         })
     }
@@ -266,6 +303,51 @@ mod tests {
     }
 
     #[test]
+    fn lex_float_is_single_token() {
+        let lexer = Lexer::new("123.456");
+        let tokens: Vec<_> = lexer.collect();
+        assert_eq!(tokens.len(), 1, "float should be a single token");
+        assert_eq!(tokens[0].kind, TokenKind::Number);
+        assert_eq!(tokens[0].text, "123.456");
+    }
+
+    #[test]
+    fn lex_trailing_dot_float() {
+        check("123.", TokenKind::Number);
+    }
+
+    #[test]
+    fn bare_dot_not_a_number() {
+        let mut lexer = Lexer::new(".");
+        assert!(lexer.next().is_none(), "bare dot should not be a number token");
+    }
+
+    #[test]
+    fn lex_scientific_integer() {
+        check("1e5", TokenKind::Number);
+    }
+
+    #[test]
+    fn lex_scientific_negative_exponent() {
+        check("1e-3", TokenKind::Number);
+    }
+
+    #[test]
+    fn lex_scientific_float() {
+        check("1.5e3", TokenKind::Number);
+    }
+
+    #[test]
+    fn lex_scientific_float_negative_exponent() {
+        check("1.5e-3", TokenKind::Number);
+    }
+
+    #[test]
+    fn lex_scientific_leading_dot() {
+        check(".5e3", TokenKind::Number);
+    }
+
+    #[test]
     fn lex_plus() {
         check("+", TokenKind::Plus);
     }
@@ -291,6 +373,56 @@ mod tests {
     }
 
     #[test]
+    fn lex_tilde() {
+        check("~", TokenKind::Tilde);
+    }
+
+    #[test]
+    fn lex_tilde_equals() {
+        check("~=", TokenKind::TildeEquals);
+    }
+
+    #[test]
+    fn lex_at() {
+        check("@", TokenKind::At);
+    }
+
+    #[test]
+    fn lex_plus_equals() {
+        check("+=", TokenKind::PlusEquals);
+    }
+
+    #[test]
+    fn lex_minus_equals() {
+        check("-=", TokenKind::MinusEquals);
+    }
+
+    #[test]
+    fn lex_asterisk_equals() {
+        check("*=", TokenKind::AsteriskEquals);
+    }
+
+    #[test]
+    fn lex_slash_equals() {
+        check("/=", TokenKind::SlashEquals);
+    }
+
+    #[test]
+    fn lex_elmt_mult_equals() {
+        check(".*=", TokenKind::ElmtMultEquals);
+    }
+
+    #[test]
+    fn lex_elmt_div_equals() {
+        check("./=", TokenKind::ElmtDivEquals);
+    }
+
+    #[test]
+    fn lex_elmt_pow_equals() {
+        check(".^=", TokenKind::ElmtPowEquals);
+    }
+
+    #[test]
     fn lex_left_brace() {
         check("{", TokenKind::LBrace);
     }
@@ -308,6 +440,11 @@ mod tests {
     #[test]
     fn lex_right_parenthesis() {
         check(")", TokenKind::RParen);
+    }
+
+    #[test]
+    fn lex_comma() {
+        check(",", TokenKind::Comma);
     }
 
     #[test]
@@ -442,7 +579,7 @@ mod tests {
     }
 
     // Test with full coverage. An error here would be hard to debug
-    fn to_kw_or_not_to_kw() -> ([TokenKind; 25], [TokenKind; 35]) {
+    fn to_kw_or_not_to_kw() -> ([TokenKind; 25], [TokenKind; 46]) {
         use crate::TokenKind::*;
         let keywords = [
             FnKw,
@@ -491,6 +628,9 @@ mod tests {
             Transpose,
             ElmtTranspose,
             Not,
+            TildeEquals,
+            Tilde,
+            At,
             And,
             Or,
             EqualsEquals,
@@ -500,7 +640,15 @@ mod tests {
             LessThanEquals,
             GreaterThanEquals,
             Equals,
+            PlusEquals,
+            MinusEquals,
+            AsteriskEquals,
+            SlashEquals,
+            ElmtMultEquals,
+            ElmtDivEquals,
+            ElmtPowEquals,
             Colon,
+            Comma,
             LParen,
             RParen,
             LBracket,
