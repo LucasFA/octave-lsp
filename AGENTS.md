@@ -96,11 +96,18 @@ inspects the operator token kind to classify (`Expr::BinaryExpr` vs future
 `Expr::CompareExpr` vs `Expr::LogicExpr`). This avoids exploding the
 `SyntaxConstruct` enum without losing semantic precision.
 
+## Notable gotchas
+
+- **`SyntaxConstruct::VariableDef` is dead code** from the parser side since
+  assignment uses `InfixExpr` with `=` operator. The AST layer still accepts it
+  in `VariableDef::cast()` for backward compat, but the parser no longer emits it.
+  Consider removing `SyntaxConstruct::VariableDef` once downstream code is updated.
+
 ---
 
 ## Build plan: bottom-up Octave syntax coverage
 
-### Phase 1: Lexer (`crates/lexer/src/token_kind.rs`)
+### ✅ Phase 1: Lexer (`crates/lexer/src/token_kind.rs`)
 
 **1a. Fix float regex + add scientific notation.** Current `\d+` + `\d*\.\d*`
 fragments `123.456` into two tokens and matches bare `.`. Replace with one
@@ -119,19 +126,18 @@ context (string at expression start; transpose after an expression).
 
 **1f. Add compound assignment** — `+=`, `-=`, `*=`, `/=`, `.*=`, `./=`, `.^=`
 
-### Phase 2: Syntax constructs (`crates/syntax/src/lib.rs`)
+### ✅ Phase 2: Syntax constructs (`crates/syntax/src/lib.rs`)
 
 Add `SyntaxConstruct` variants (no parser changes yet):
 
 `MatrixExpr`, `CallExpr`, `PostfixExpr`, `RangeExpr`, `Block`,
 `FnDef`, `IfStmt`, `ForLoop`, `WhileLoop`, `BreakStmt`, `ContinueStmt`
 
-### Phase 3: Parser grammar (`crates/parser/src/grammar/`)
+### ✅ Phase 3a: Extend binding power table (`crates/parser/src/grammar/expr.rs`)
 
-**3a. Extend binding power table** (`expr.rs`) — add all unused operators to
-the Pratt loop. Power operators right-associative (left bp < right bp).
-
-**3b. Matrix/cell literals** — `[ ]` with comma/semicolon-separated rows.
+Add all unused operators to the Pratt loop. Power operators right-associative
+(left bp < right bp). Assignment `=` handled as lowest-precedence infix
+operator — `VariableDef` construct is no longer emitted by parser.
 
 **3c. Function calls** — after LHS check for `(` → comma-separated args.
 

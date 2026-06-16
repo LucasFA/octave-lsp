@@ -114,6 +114,35 @@ fn paren_expr(p: &mut Parser) -> CompletedMarker {
     m.complete(p, SyntaxConstruct::ParenExpr.into())
 }
 
+fn matrix_expr(p: &mut Parser) -> CompletedMarker {
+    assert!(p.at(TokenKind::LBracket));
+
+    let m = p.start();
+    p.bump();
+
+    loop {
+        if p.at(TokenKind::RBracket) {
+            p.bump();
+            break;
+        }
+
+        // Handle separators (comma = column sep, semicolon = row sep)
+        if p.at(TokenKind::Comma) || p.at(TokenKind::Semicolon) {
+            p.bump();
+            continue;
+        }
+
+        if p.at_end() {
+            break;
+        }
+
+        // Parse element expression
+        expr(p);
+    }
+
+    m.complete(p, SyntaxConstruct::MatrixExpr.into())
+}
+
 fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
     let cm = if p.at(TokenKind::Number) {
         literal(p)
@@ -125,6 +154,8 @@ fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
         prefix_expr(p)
     } else if p.at(TokenKind::LParen) {
         paren_expr(p)
+    } else if p.at(TokenKind::LBracket) {
+        matrix_expr(p)
     } else if let Some(TokenKind::Semicolon) = p.peek() {
         // Finished expression succesfully
         p.bump();
@@ -513,7 +544,7 @@ Root@0..19
                       Literal@1..2
                         Number@1..2 "1"
                       Plus@2..3 "+"
-                error at 2..3: expected number, identifier, '-', '+', '!', '~' or '('
+                error at 2..3: expected number, identifier, '-', '+', '!', '~', '(' or '['
                 error at 2..3: expected ')'"#]],
         );
     }
@@ -688,5 +719,55 @@ Root@0..2
                 Whitespace@7..8 " "
                 VariableRef@8..9
                   Identifier@8..9 "c""#]]);
+    }
+
+    #[test]
+    fn parse_empty_matrix() {
+        check("[]", expect![[r#"
+Root@0..2
+  MatrixExpr@0..2
+    LBracket@0..1 "["
+    RBracket@1..2 "]""#]]);
+    }
+
+    #[test]
+    fn parse_single_element_matrix() {
+        check("[1]", expect![[r#"
+Root@0..3
+  MatrixExpr@0..3
+    LBracket@0..1 "["
+    Literal@1..2
+      Number@1..2 "1"
+    RBracket@2..3 "]""#]]);
+    }
+
+    #[test]
+    fn parse_matrix_two_elements() {
+        check("[1, 2]", expect![[r#"
+            Root@0..6
+              MatrixExpr@0..6
+                LBracket@0..1 "["
+                Literal@1..2
+                  Number@1..2 "1"
+                Comma@2..3 ","
+                Whitespace@3..4 " "
+                Literal@4..5
+                  Number@4..5 "2"
+                RBracket@5..6 "]""#]]);
+    }
+
+    #[test]
+    fn parse_matrix_two_rows() {
+        check("[1; 2]", expect![[r#"
+            Root@0..6
+              MatrixExpr@0..6
+                LBracket@0..1 "["
+                Literal@1..2
+                  Number@1..2 "1"
+                Semicolon@2..3 ";"
+                Whitespace@3..4 " "
+                Literal@4..5
+                  Number@4..5 "2"
+                RBracket@5..6 "]""#]]);
     }
 }
