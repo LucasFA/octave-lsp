@@ -6,8 +6,8 @@ mod parser;
 mod sink;
 mod source;
 
-use crate::parser::Parser;
 pub use crate::parser::ParseError;
+use crate::parser::Parser;
 use lexer::Lexer;
 use rowan::GreenNode;
 use sink::Sink;

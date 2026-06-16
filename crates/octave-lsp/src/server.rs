@@ -55,8 +55,7 @@ fn handle_notification(
 ) -> Result<()> {
     match not.method.as_str() {
         DidOpenTextDocument::METHOD => {
-            let params: DidOpenTextDocumentParams =
-                serde_json::from_value(not.params.clone())?;
+            let params: DidOpenTextDocumentParams = serde_json::from_value(not.params.clone())?;
             let uri = params.text_document.uri;
             let text = params.text_document.text;
             let key = uri.to_string();
@@ -64,8 +63,7 @@ fn handle_notification(
             publish_diagnostics(connection, &uri, &text);
         }
         DidChangeTextDocument::METHOD => {
-            let params: DidChangeTextDocumentParams =
-                serde_json::from_value(not.params.clone())?;
+            let params: DidChangeTextDocumentParams = serde_json::from_value(not.params.clone())?;
             let uri = params.text_document.uri;
             let key = uri.to_string();
             let mut text = documents.remove(&key).unwrap_or_default();
