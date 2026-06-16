@@ -4,6 +4,12 @@ use syntax::{SyntaxConstruct, TokenKind};
 pub(super) fn stmt(p: &mut Parser) -> Option<CompletedMarker> {
     if p.at(TokenKind::IfKw) {
         Some(if_stmt(p))
+    } else if p.at(TokenKind::ForKw) {
+        Some(for_loop(p))
+    } else if p.at(TokenKind::WhileKw) {
+        Some(while_loop(p))
+    } else if p.at(TokenKind::SwitchKw) {
+        Some(switch_stmt(p))
     } else if p.at(TokenKind::BreakKw) {
         Some(break_stmt(p))
     } else if p.at(TokenKind::ContinueKw) {
@@ -43,6 +49,81 @@ fn if_stmt(p: &mut Parser) -> CompletedMarker {
     }
 
     m.complete(p, SyntaxConstruct::IfStmt.into())
+}
+
+fn for_loop(p: &mut Parser) -> CompletedMarker {
+    let m = p.start();
+    p.bump(); // for
+
+    // Parse loop variable + range: `i = 1:10`
+    expr::expr(p);
+
+    // Parse body until endfor/end
+    loop {
+        if p.at(TokenKind::EndForKw) || p.at(TokenKind::EndKw) {
+            p.bump();
+            break;
+        }
+        if p.at_end() {
+            break;
+        }
+        stmt(p);
+    }
+
+    m.complete(p, SyntaxConstruct::ForLoop.into())
+}
+
+fn while_loop(p: &mut Parser) -> CompletedMarker {
+    let m = p.start();
+    p.bump(); // while
+
+    // Parse condition
+    expr::expr(p);
+
+    // Parse body until endwhile/end
+    loop {
+        if p.at(TokenKind::EndWhileKw) || p.at(TokenKind::EndKw) {
+            p.bump();
+            break;
+        }
+        if p.at_end() {
+            break;
+        }
+        stmt(p);
+    }
+
+    m.complete(p, SyntaxConstruct::WhileLoop.into())
+}
+
+fn switch_stmt(p: &mut Parser) -> CompletedMarker {
+    let m = p.start();
+    p.bump(); // switch
+
+    // Parse switched expression
+    expr::expr(p);
+
+    // Parse cases until endswitch/end
+    loop {
+        if p.at(TokenKind::CaseKw) {
+            p.bump();
+            expr::expr(p); // case value (optional)
+            continue;
+        }
+        if p.at(TokenKind::OtherwiseKw) {
+            p.bump();
+            continue;
+        }
+        if p.at(TokenKind::EndSwitchKw) || p.at(TokenKind::EndKw) {
+            p.bump();
+            break;
+        }
+        if p.at_end() {
+            break;
+        }
+        stmt(p);
+    }
+
+    m.complete(p, SyntaxConstruct::SwitchStmt.into())
 }
 
 fn break_stmt(p: &mut Parser) -> CompletedMarker {
@@ -324,27 +405,104 @@ Root@0..8
     #[test]
     fn parse_if_elseif_else() {
         check("if x; elseif y; else; z; endif", expect![[r#"
-            Root@0..30
-              IfStmt@0..30
-                IfKw@0..2 "if"
-                Whitespace@2..3 " "
-                VariableRef@3..4
-                  Identifier@3..4 "x"
-                Semicolon@4..5 ";"
+Root@0..30
+  IfStmt@0..30
+    IfKw@0..2 "if"
+    Whitespace@2..3 " "
+    VariableRef@3..4
+      Identifier@3..4 "x"
+    Semicolon@4..5 ";"
+    Whitespace@5..6 " "
+    ElseIfKw@6..12 "elseif"
+    Whitespace@12..13 " "
+    VariableRef@13..14
+      Identifier@13..14 "y"
+    Semicolon@14..15 ";"
+    Whitespace@15..16 " "
+    ElseKw@16..20 "else"
+    Semicolon@20..21 ";"
+    Whitespace@21..22 " "
+    VariableRef@22..23
+      Identifier@22..23 "z"
+    Semicolon@23..24 ";"
+    Whitespace@24..25 " "
+    EndIfKw@25..30 "endif""#]]);
+    }
+
+    #[test]
+    fn parse_for_loop() {
+        check("for i = 1:10; x; endfor", expect![[r#"
+            Root@0..23
+              ForLoop@0..23
+                ForKw@0..3 "for"
+                Whitespace@3..4 " "
+                InfixExpr@4..14
+                  VariableRef@4..6
+                    Identifier@4..5 "i"
+                    Whitespace@5..6 " "
+                  Equals@6..7 "="
+                  Whitespace@7..8 " "
+                  InfixExpr@8..14
+                    Literal@8..9
+                      Number@8..9 "1"
+                    Colon@9..10 ":"
+                    Literal@10..12
+                      Number@10..12 "10"
+                    Semicolon@12..13 ";"
+                    Whitespace@13..14 " "
+                VariableRef@14..15
+                  Identifier@14..15 "x"
+                Semicolon@15..16 ";"
+                Whitespace@16..17 " "
+                EndForKw@17..23 "endfor""#]]);
+    }
+
+    #[test]
+    fn parse_while_loop() {
+        check("while x; y; endwhile", expect![[r#"
+            Root@0..20
+              WhileLoop@0..20
+                WhileKw@0..5 "while"
                 Whitespace@5..6 " "
-                ElseIfKw@6..12 "elseif"
-                Whitespace@12..13 " "
-                VariableRef@13..14
-                  Identifier@13..14 "y"
-                Semicolon@14..15 ";"
-                Whitespace@15..16 " "
-                ElseKw@16..20 "else"
-                Semicolon@20..21 ";"
-                Whitespace@21..22 " "
-                VariableRef@22..23
-                  Identifier@22..23 "z"
-                Semicolon@23..24 ";"
-                Whitespace@24..25 " "
-                EndIfKw@25..30 "endif""#]]);
+                VariableRef@6..7
+                  Identifier@6..7 "x"
+                Semicolon@7..8 ";"
+                Whitespace@8..9 " "
+                VariableRef@9..10
+                  Identifier@9..10 "y"
+                Semicolon@10..11 ";"
+                Whitespace@11..12 " "
+                EndWhileKw@12..20 "endwhile""#]]);
+    }
+
+    #[test]
+    fn parse_switch() {
+        check("switch x; case 1; y; otherwise; z; endswitch", expect![[r#"
+            Root@0..44
+              SwitchStmt@0..44
+                SwitchKw@0..6 "switch"
+                Whitespace@6..7 " "
+                VariableRef@7..8
+                  Identifier@7..8 "x"
+                Semicolon@8..9 ";"
+                Whitespace@9..10 " "
+                CaseKw@10..14 "case"
+                Whitespace@14..15 " "
+                Literal@15..16
+                  Number@15..16 "1"
+                Semicolon@16..17 ";"
+                Whitespace@17..18 " "
+                VariableRef@18..19
+                  Identifier@18..19 "y"
+                Semicolon@19..20 ";"
+                Whitespace@20..21 " "
+                OtherwiseKw@21..30 "otherwise"
+                Semicolon@30..31 ";"
+                Whitespace@31..32 " "
+                VariableRef@32..33
+                  Identifier@32..33 "z"
+                Semicolon@33..34 ";"
+                Whitespace@34..35 " "
+                EndSwitchKw@35..44 "endswitch""#]]);
     }
 }

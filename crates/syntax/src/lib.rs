@@ -84,6 +84,7 @@ pub enum SyntaxConstruct {
     WhileLoop,
     BreakStmt,
     ContinueStmt,
+    SwitchStmt,
 }
 
 impl From<SyntaxKind> for u16 {

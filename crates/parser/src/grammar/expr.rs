@@ -861,7 +861,7 @@ Root@0..7
     }
 
     #[test]
-    fn parse_expression_followed_by_parens_is_not_call() {
+    fn parse_expression_followed_by_parens_is_call() {
         // (1+2)(3) — LHS is a ParenExpr, then parenthesized args
         check("(1+2)(3)", expect![[r#"
             Root@0..8

@@ -150,7 +150,8 @@ impl Expr {
                 | SyntaxConstruct::ForLoop
                 | SyntaxConstruct::WhileLoop
                 | SyntaxConstruct::BreakStmt
-                | SyntaxConstruct::ContinueStmt => return None,
+                | SyntaxConstruct::ContinueStmt
+                | SyntaxConstruct::SwitchStmt => return None,
             };
         } else {
             return None;
