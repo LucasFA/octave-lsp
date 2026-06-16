@@ -2,7 +2,9 @@ use super::{CompletedMarker, Parser, expr};
 use syntax::{SyntaxConstruct, TokenKind};
 
 pub(super) fn stmt(p: &mut Parser) -> Option<CompletedMarker> {
-    if p.at(TokenKind::IfKw) {
+    if p.at(TokenKind::FnKw) {
+        Some(fn_def(p))
+    } else if p.at(TokenKind::IfKw) {
         Some(if_stmt(p))
     } else if p.at(TokenKind::ForKw) {
         Some(for_loop(p))
@@ -17,6 +19,29 @@ pub(super) fn stmt(p: &mut Parser) -> Option<CompletedMarker> {
     } else {
         expr::expr(p)
     }
+}
+
+fn fn_def(p: &mut Parser) -> CompletedMarker {
+    let m = p.start();
+    p.bump(); // function
+
+    // Parse the function header (output args = name(input args))
+    // e.g. `y = f(x)` or `[out1, out2] = name(in1, in2)`
+    expr::expr(p);
+
+    // Parse body statements until endfunction/endfn/end
+    loop {
+        if p.at(TokenKind::EndFnKw) || p.at(TokenKind::EndKw) {
+            p.bump();
+            break;
+        }
+        if p.at_end() {
+            break;
+        }
+        stmt(p);
+    }
+
+    m.complete(p, SyntaxConstruct::FnDef.into())
 }
 
 fn if_stmt(p: &mut Parser) -> CompletedMarker {
@@ -478,31 +503,71 @@ Root@0..30
     #[test]
     fn parse_switch() {
         check("switch x; case 1; y; otherwise; z; endswitch", expect![[r#"
-            Root@0..44
-              SwitchStmt@0..44
-                SwitchKw@0..6 "switch"
-                Whitespace@6..7 " "
-                VariableRef@7..8
-                  Identifier@7..8 "x"
-                Semicolon@8..9 ";"
-                Whitespace@9..10 " "
-                CaseKw@10..14 "case"
-                Whitespace@14..15 " "
-                Literal@15..16
-                  Number@15..16 "1"
-                Semicolon@16..17 ";"
-                Whitespace@17..18 " "
-                VariableRef@18..19
-                  Identifier@18..19 "y"
-                Semicolon@19..20 ";"
-                Whitespace@20..21 " "
-                OtherwiseKw@21..30 "otherwise"
-                Semicolon@30..31 ";"
-                Whitespace@31..32 " "
-                VariableRef@32..33
-                  Identifier@32..33 "z"
-                Semicolon@33..34 ";"
-                Whitespace@34..35 " "
-                EndSwitchKw@35..44 "endswitch""#]]);
+Root@0..44
+  SwitchStmt@0..44
+    SwitchKw@0..6 "switch"
+    Whitespace@6..7 " "
+    VariableRef@7..8
+      Identifier@7..8 "x"
+    Semicolon@8..9 ";"
+    Whitespace@9..10 " "
+    CaseKw@10..14 "case"
+    Whitespace@14..15 " "
+    Literal@15..16
+      Number@15..16 "1"
+    Semicolon@16..17 ";"
+    Whitespace@17..18 " "
+    VariableRef@18..19
+      Identifier@18..19 "y"
+    Semicolon@19..20 ";"
+    Whitespace@20..21 " "
+    OtherwiseKw@21..30 "otherwise"
+    Semicolon@30..31 ";"
+    Whitespace@31..32 " "
+    VariableRef@32..33
+      Identifier@32..33 "z"
+    Semicolon@33..34 ";"
+    Whitespace@34..35 " "
+    EndSwitchKw@35..44 "endswitch""#]]);
+    }
+
+    #[test]
+    fn parse_function_def() {
+        check("function y = f(x)\n  y = x * 2\nend", expect![[r#"
+            Root@0..33
+              FnDef@0..33
+                FnKw@0..8 "function"
+                Whitespace@8..9 " "
+                InfixExpr@9..20
+                  VariableRef@9..11
+                    Identifier@9..10 "y"
+                    Whitespace@10..11 " "
+                  Equals@11..12 "="
+                  Whitespace@12..13 " "
+                  CallExpr@13..20
+                    VariableRef@13..14
+                      Identifier@13..14 "f"
+                    LParen@14..15 "("
+                    VariableRef@15..16
+                      Identifier@15..16 "x"
+                    RParen@16..17 ")"
+                    Newline@17..18 "\n"
+                    Whitespace@18..20 "  "
+                InfixExpr@20..30
+                  VariableRef@20..22
+                    Identifier@20..21 "y"
+                    Whitespace@21..22 " "
+                  Equals@22..23 "="
+                  Whitespace@23..24 " "
+                  InfixExpr@24..30
+                    VariableRef@24..26
+                      Identifier@24..25 "x"
+                      Whitespace@25..26 " "
+                    Asterisk@26..27 "*"
+                    Whitespace@27..28 " "
+                    Literal@28..30
+                      Number@28..29 "2"
+                      Newline@29..30 "\n"
+                EndKw@30..33 "end""#]]);
     }
 }
