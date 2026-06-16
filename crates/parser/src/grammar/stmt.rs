@@ -1,40 +1,7 @@
-use syntax::SyntaxConstruct;
-
-use super::{CompletedMarker, Parser, TokenKind, expr};
+use super::{CompletedMarker, Parser, expr};
 
 pub(super) fn stmt(p: &mut Parser) -> Option<CompletedMarker> {
-    if p.at(TokenKind::Identifier) {
-        Some(handle_variable(p))
-    } else {
-        expr::expr(p)
-    }
-}
-
-fn handle_variable(p: &mut Parser) -> CompletedMarker {
-    assert!(p.at(TokenKind::Identifier));
-    let lhs = p.start();
-    p.bump();
-
-    if p.at(TokenKind::Equals) {
-        let var_def = lhs
-            .complete(p, SyntaxConstruct::VariableRef.into())
-            .precede(p);
-        p.bump();
-        expr::expr(p);
-        return var_def.complete(p, SyntaxConstruct::VariableDef.into());
-    }
-
-    if p.at_end() {
-        return lhs.complete(p, SyntaxConstruct::VariableRef.into());
-    }
-
-    let lhs = lhs.complete(p, SyntaxConstruct::VariableRef.into());
-    let m = lhs.precede(p);
-    // get what it is and then
-    p.bump();
-    expr::expr(p);
-
-    m.complete(p, SyntaxConstruct::InfixExpr.into())
+    expr::expr(p)
 }
 
 #[cfg(test)]
@@ -48,7 +15,7 @@ mod tests {
             "foo = bar",
             expect![[r#"
                 Root@0..9
-                  VariableDef@0..9
+                  InfixExpr@0..9
                     VariableRef@0..4
                       Identifier@0..3 "foo"
                       Whitespace@3..4 " "
@@ -65,7 +32,7 @@ mod tests {
             "a = 43;",
             expect![[r#"
                 Root@0..7
-                  VariableDef@0..7
+                  InfixExpr@0..7
                     VariableRef@0..2
                       Identifier@0..1 "a"
                       Whitespace@1..2 " "
@@ -83,7 +50,7 @@ mod tests {
             "a = 43; 7",
             expect![[r#"
                 Root@0..9
-                  VariableDef@0..8
+                  InfixExpr@0..8
                     VariableRef@0..2
                       Identifier@0..1 "a"
                       Whitespace@1..2 " "
@@ -104,7 +71,7 @@ mod tests {
             "a = 43 + ;",
             expect![[r#"
                 Root@0..10
-                  VariableDef@0..10
+                  InfixExpr@0..10
                     VariableRef@0..2
                       Identifier@0..1 "a"
                       Whitespace@1..2 " "
@@ -126,7 +93,7 @@ mod tests {
             "a = 43 + ;b = a",
             expect![[r#"
                 Root@0..15
-                  VariableDef@0..10
+                  InfixExpr@0..10
                     VariableRef@0..2
                       Identifier@0..1 "a"
                       Whitespace@1..2 " "
@@ -139,7 +106,7 @@ mod tests {
                       Plus@7..8 "+"
                       Whitespace@8..9 " "
                       Semicolon@9..10 ";"
-                  VariableDef@10..15
+                  InfixExpr@10..15
                     VariableRef@10..12
                       Identifier@10..11 "b"
                       Whitespace@11..12 " "
@@ -156,7 +123,7 @@ mod tests {
             "a = ;\nb = a",
             expect![[r#"
                 Root@0..11
-                  VariableDef@0..6
+                  InfixExpr@0..6
                     VariableRef@0..2
                       Identifier@0..1 "a"
                       Whitespace@1..2 " "
@@ -164,7 +131,7 @@ mod tests {
                     Whitespace@3..4 " "
                     Semicolon@4..5 ";"
                     Newline@5..6 "\n"
-                  VariableDef@6..11
+                  InfixExpr@6..11
                     VariableRef@6..8
                       Identifier@6..7 "b"
                       Whitespace@7..8 " "
@@ -211,7 +178,7 @@ Root@0..3
             "a = 1\na",
             expect![[r#"
                 Root@0..7
-                  VariableDef@0..6
+                  InfixExpr@0..6
                     VariableRef@0..2
                       Identifier@0..1 "a"
                       Whitespace@1..2 " "
@@ -230,21 +197,21 @@ Root@0..3
         check(
             "a + b + 1",
             expect![[r#"
-Root@0..9
-  InfixExpr@0..9
-    VariableRef@0..2
-      Identifier@0..1 "a"
-      Whitespace@1..2 " "
-    Plus@2..3 "+"
-    Whitespace@3..4 " "
-    InfixExpr@4..9
-      VariableRef@4..6
-        Identifier@4..5 "b"
-        Whitespace@5..6 " "
-      Plus@6..7 "+"
-      Whitespace@7..8 " "
-      Literal@8..9
-        Number@8..9 "1""#]],
+                Root@0..9
+                  InfixExpr@0..9
+                    InfixExpr@0..6
+                      VariableRef@0..2
+                        Identifier@0..1 "a"
+                        Whitespace@1..2 " "
+                      Plus@2..3 "+"
+                      Whitespace@3..4 " "
+                      VariableRef@4..6
+                        Identifier@4..5 "b"
+                        Whitespace@5..6 " "
+                    Plus@6..7 "+"
+                    Whitespace@7..8 " "
+                    Literal@8..9
+                      Number@8..9 "1""#]],
         )
     }
 }

@@ -6,29 +6,54 @@ use lexer::TokenKind;
 use syntax::SyntaxConstruct;
 
 enum BinaryOp {
+    Assign,
     Add,
     Sub,
     Mul,
     Div,
+    ElmtMul,
+    ElmtDiv,
+    LeftDiv,
+    ElmtLeftDiv,
+    Pow,
+    ElmtPow,
+    Eq,
+    Neq,
+    Lt,
+    Gt,
+    Le,
+    Ge,
+    And,
+    Or,
+    Colon,
 }
 
 impl BinaryOp {
     fn binding_power(&self) -> (u8, u8) {
         match self {
-            Self::Add | Self::Sub => (1, 2),
-            Self::Mul | Self::Div => (3, 4),
+            Self::Assign => (0, 1),
+            Self::Or => (1, 2),
+            Self::And => (3, 4),
+            Self::Eq | Self::Neq | Self::Lt | Self::Gt | Self::Le | Self::Ge => (5, 6),
+            Self::Colon => (7, 8),
+            Self::Add | Self::Sub => (9, 10),
+            Self::Mul | Self::Div | Self::ElmtMul | Self::ElmtDiv | Self::LeftDiv
+            | Self::ElmtLeftDiv => (11, 12),
+            Self::Pow | Self::ElmtPow => (13, 12),
         }
     }
 }
 
 enum UnaryOp {
     Neg,
+    Pos,
+    Not,
 }
 
 impl UnaryOp {
     fn binding_power(&self) -> ((), u8) {
         match self {
-            Self::Neg => ((), 5),
+            Self::Neg | Self::Pos | Self::Not => ((), 15),
         }
     }
 }
@@ -55,11 +80,17 @@ fn variable_ref(p: &mut Parser) -> CompletedMarker {
 }
 
 fn prefix_expr(p: &mut Parser) -> CompletedMarker {
-    assert!(p.at(TokenKind::Minus));
-
     let m = p.start();
 
-    let op = UnaryOp::Neg;
+    let op = if p.at(TokenKind::Minus) {
+        UnaryOp::Neg
+    } else if p.at(TokenKind::Plus) {
+        UnaryOp::Pos
+    } else if p.at(TokenKind::Not) || p.at(TokenKind::Tilde) {
+        UnaryOp::Not
+    } else {
+        unreachable!()
+    };
     let ((), right_binding_power) = op.binding_power();
 
     // Eat the operator's token.
@@ -88,7 +119,9 @@ fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
         literal(p)
     } else if p.at(TokenKind::Identifier) {
         variable_ref(p)
-    } else if p.at(TokenKind::Minus) {
+    } else if p.at(TokenKind::Minus) || p.at(TokenKind::Plus) || p.at(TokenKind::Not)
+        || p.at(TokenKind::Tilde)
+    {
         prefix_expr(p)
     } else if p.at(TokenKind::LParen) {
         paren_expr(p)
@@ -108,6 +141,14 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) -> Option<Compl
     let mut lhs = lhs(p)?;
 
     loop {
+        // Postfix operators (transpose, element-wise transpose)
+        if p.at(TokenKind::Transpose) || p.at(TokenKind::ElmtTranspose) {
+            let m = lhs.precede(p);
+            p.bump();
+            lhs = m.complete(p, SyntaxConstruct::PostfixExpr.into());
+            continue;
+        }
+
         let op = if p.at(TokenKind::Plus) {
             BinaryOp::Add
         } else if p.at(TokenKind::Minus) {
@@ -116,6 +157,40 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) -> Option<Compl
             BinaryOp::Mul
         } else if p.at(TokenKind::Slash) {
             BinaryOp::Div
+        } else if p.at(TokenKind::ElmtMult) {
+            BinaryOp::ElmtMul
+        } else if p.at(TokenKind::ElmtDiv) {
+            BinaryOp::ElmtDiv
+        } else if p.at(TokenKind::LeftDiv) {
+            BinaryOp::LeftDiv
+        } else if p.at(TokenKind::ElmtLeftDiv) {
+            BinaryOp::ElmtLeftDiv
+        } else if p.at(TokenKind::Caret) {
+            BinaryOp::Pow
+        } else if p.at(TokenKind::ElmtPow) {
+            BinaryOp::ElmtPow
+        } else if p.at(TokenKind::EqualsEquals) || p.at(TokenKind::NotEquals)
+            || p.at(TokenKind::LessThan) || p.at(TokenKind::GreaterThan)
+            || p.at(TokenKind::LessThanEquals) || p.at(TokenKind::GreaterThanEquals)
+            || p.at(TokenKind::TildeEquals)
+        {
+            match p.peek().unwrap() {
+                TokenKind::EqualsEquals => BinaryOp::Eq,
+                TokenKind::NotEquals | TokenKind::TildeEquals => BinaryOp::Neq,
+                TokenKind::LessThan => BinaryOp::Lt,
+                TokenKind::GreaterThan => BinaryOp::Gt,
+                TokenKind::LessThanEquals => BinaryOp::Le,
+                TokenKind::GreaterThanEquals => BinaryOp::Ge,
+                _ => unreachable!(),
+            }
+        } else if p.at(TokenKind::And) {
+            BinaryOp::And
+        } else if p.at(TokenKind::Or) {
+            BinaryOp::Or
+        } else if p.at(TokenKind::Colon) {
+            BinaryOp::Colon
+        } else if p.at(TokenKind::Equals) {
+            BinaryOp::Assign
         } else if let Some(TokenKind::Semicolon) = p.peek() {
             // Finished expression unsuccesfully
             p.bump();
@@ -405,12 +480,12 @@ Root@0..19
         check(
             "(foo",
             expect![[r#"
-Root@0..4
-  ParenExpr@0..4
-    LParen@0..1 "("
-    VariableRef@1..4
-      Identifier@1..4 "foo"
-error at 1..4: expected '+', '-', '*', '/' or ')'"#]],
+                Root@0..4
+                  ParenExpr@0..4
+                    LParen@0..1 "("
+                    VariableRef@1..4
+                      Identifier@1..4 "foo"
+                error at 1..4: expected '', '.'', '+', '-', '*', '/', '.*', './', '\', '.\\!, '^', '.^', '==', '!=', '<', '>', '<=', '>=', '~=', '&&', '||', ':', '=' or ')'"#]],
         );
     }
 
@@ -431,15 +506,187 @@ error at 1..4: expected '+', '-', '*', '/' or ')'"#]],
         check(
             "(1+",
             expect![[r#"
-Root@0..3
-  ParenExpr@0..3
-    LParen@0..1 "("
-    InfixExpr@1..3
-      Literal@1..2
-        Number@1..2 "1"
-      Plus@2..3 "+"
-error at 2..3: expected number, identifier, '-' or '('
-error at 2..3: expected ')'"#]],
+                Root@0..3
+                  ParenExpr@0..3
+                    LParen@0..1 "("
+                    InfixExpr@1..3
+                      Literal@1..2
+                        Number@1..2 "1"
+                      Plus@2..3 "+"
+                error at 2..3: expected number, identifier, '-', '+', '!', '~' or '('
+                error at 2..3: expected ')'"#]],
         );
+    }
+
+    #[test]
+    fn parse_elementwise_mult() {
+        check("1 .* 2", expect![[r#"
+Root@0..6
+  InfixExpr@0..6
+    Literal@0..2
+      Number@0..1 "1"
+      Whitespace@1..2 " "
+    ElmtMult@2..4 ".*"
+    Whitespace@4..5 " "
+    Literal@5..6
+      Number@5..6 "2""#]]);
+    }
+
+    #[test]
+    fn parse_elementwise_div() {
+        check("1 ./ 2", expect![[r#"
+Root@0..6
+  InfixExpr@0..6
+    Literal@0..2
+      Number@0..1 "1"
+      Whitespace@1..2 " "
+    ElmtDiv@2..4 "./"
+    Whitespace@4..5 " "
+    Literal@5..6
+      Number@5..6 "2""#]]);
+    }
+
+    #[test]
+    fn parse_elementwise_pow() {
+        check("1 .^ 2", expect![[r#"
+Root@0..6
+  InfixExpr@0..6
+    Literal@0..2
+      Number@0..1 "1"
+      Whitespace@1..2 " "
+    ElmtPow@2..4 ".^"
+    Whitespace@4..5 " "
+    Literal@5..6
+      Number@5..6 "2""#]]);
+    }
+
+    #[test]
+    fn parse_power_right_assoc() {
+        check("1^2^3", expect![[r#"
+Root@0..5
+  InfixExpr@0..5
+    Literal@0..1
+      Number@0..1 "1"
+    Caret@1..2 "^"
+    InfixExpr@2..5
+      Literal@2..3
+        Number@2..3 "2"
+      Caret@3..4 "^"
+      Literal@4..5
+        Number@4..5 "3""#]]);
+    }
+
+    #[test]
+    fn parse_equality() {
+        check("1 == 2", expect![[r#"
+Root@0..6
+  InfixExpr@0..6
+    Literal@0..2
+      Number@0..1 "1"
+      Whitespace@1..2 " "
+    EqualsEquals@2..4 "=="
+    Whitespace@4..5 " "
+    Literal@5..6
+      Number@5..6 "2""#]]);
+    }
+
+    #[test]
+    fn parse_not_equals() {
+        check("1 ~= 2", expect![[r#"
+Root@0..6
+  InfixExpr@0..6
+    Literal@0..2
+      Number@0..1 "1"
+      Whitespace@1..2 " "
+    TildeEquals@2..4 "~="
+    Whitespace@4..5 " "
+    Literal@5..6
+      Number@5..6 "2""#]]);
+    }
+
+    #[test]
+    fn parse_logical_and() {
+        check("1 && 2", expect![[r#"
+            Root@0..6
+              InfixExpr@0..6
+                Literal@0..2
+                  Number@0..1 "1"
+                  Whitespace@1..2 " "
+                And@2..4 "&&"
+                Whitespace@4..5 " "
+                Literal@5..6
+                  Number@5..6 "2""#]]);
+    }
+
+    #[test]
+    fn parse_transpose() {
+        check("a'", expect![[r#"
+Root@0..2
+  PostfixExpr@0..2
+    VariableRef@0..1
+      Identifier@0..1 "a"
+    Transpose@1..2 "'""#]]);
+    }
+
+    #[test]
+    fn parse_elmt_transpose() {
+        check("a.'", expect![[r#"
+Root@0..3
+  PostfixExpr@0..3
+    VariableRef@0..1
+      Identifier@0..1 "a"
+    ElmtTranspose@1..3 ".'""#]]);
+    }
+
+    #[test]
+    fn parse_range() {
+        check("1:10", expect![[r#"
+Root@0..4
+  InfixExpr@0..4
+    Literal@0..1
+      Number@0..1 "1"
+    Colon@1..2 ":"
+    Literal@2..4
+      Number@2..4 "10""#]]);
+    }
+
+    #[test]
+    fn parse_not_prefix() {
+        check("!1", expect![[r#"
+Root@0..2
+  PrefixExpr@0..2
+    Not@0..1 "!"
+    Literal@1..2
+      Number@1..2 "1""#]]);
+    }
+
+    #[test]
+    fn parse_tilde_prefix() {
+        check("~1", expect![[r#"
+Root@0..2
+  PrefixExpr@0..2
+    Tilde@0..1 "~"
+    Literal@1..2
+      Number@1..2 "1""#]]);
+    }
+
+    #[test]
+    fn parse_power_over_add_precedence() {
+        check("a ^ b + c", expect![[r#"
+            Root@0..9
+              InfixExpr@0..9
+                InfixExpr@0..6
+                  VariableRef@0..2
+                    Identifier@0..1 "a"
+                    Whitespace@1..2 " "
+                  Caret@2..3 "^"
+                  Whitespace@3..4 " "
+                  VariableRef@4..6
+                    Identifier@4..5 "b"
+                    Whitespace@5..6 " "
+                Plus@6..7 "+"
+                Whitespace@7..8 " "
+                VariableRef@8..9
+                  Identifier@8..9 "c""#]]);
     }
 }

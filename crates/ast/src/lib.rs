@@ -37,8 +37,35 @@ mod macros {
 }
 
 impl_typed_syntax_node!(VariableRef);
-impl_typed_syntax_node!(VariableDef);
 impl_typed_syntax_node!(Root);
+
+#[derive(Debug)]
+pub struct VariableDef(SyntaxNode);
+
+const _: () = {
+    const _: SyntaxConstruct = SyntaxConstruct::VariableDef;
+};
+
+impl VariableDef {
+    #[must_use]
+    pub fn cast(node: SyntaxNode) -> Option<Self> {
+        match node.kind() {
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::VariableDef) => Some(Self(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::InfixExpr) => {
+                let is_assign = node
+                    .children_with_tokens()
+                    .filter_map(SyntaxElement::into_token)
+                    .any(|token| token.kind() == SyntaxKind::LexToken(TokenKind::Equals));
+                if is_assign {
+                    Some(Self(node))
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
+    }
+}
 
 impl Root {
     pub fn stmts(&self) -> impl Iterator<Item = Stmt> {
@@ -111,9 +138,19 @@ impl Expr {
                 SyntaxConstruct::ParenExpr => Self::ParenExpr(ParenExpr(node)),
                 SyntaxConstruct::PrefixExpr => Self::UnaryExpr(UnaryExpr(node)),
                 SyntaxConstruct::VariableRef => Self::VariableRef(VariableRef(node)),
-                SyntaxConstruct::Error => return None,
                 SyntaxConstruct::Root | SyntaxConstruct::VariableDef => unreachable!(),
-                _ => return None,
+                SyntaxConstruct::MatrixExpr
+                | SyntaxConstruct::CallExpr
+                | SyntaxConstruct::PostfixExpr
+                | SyntaxConstruct::RangeExpr => todo!(),
+                SyntaxConstruct::Error
+                | SyntaxConstruct::Block
+                | SyntaxConstruct::FnDef
+                | SyntaxConstruct::IfStmt
+                | SyntaxConstruct::ForLoop
+                | SyntaxConstruct::WhileLoop
+                | SyntaxConstruct::BreakStmt
+                | SyntaxConstruct::ContinueStmt => return None,
             };
         } else {
             return None;
@@ -214,14 +251,10 @@ pub enum Stmt {
 impl Stmt {
     #[must_use]
     pub fn cast(node: SyntaxNode) -> Option<Self> {
-        let result = match node.kind() {
-            SyntaxKind::SyntaxConstruct(SyntaxConstruct::VariableDef) => {
-                Self::VariableDef(VariableDef(node))
-            }
-            _ => Self::Expr(Expr::cast(node)?),
-        };
-
-        Some(result)
+        if let Some(var_def) = VariableDef::cast(node.clone()) {
+            return Some(Self::VariableDef(var_def));
+        }
+        Some(Self::Expr(Expr::cast(node)?))
     }
 }
 
@@ -266,7 +299,7 @@ c = a * b"#;
         let v: Vec<_> = root.get_variable_definitions().collect();
         let output = format!("{v:?}");
         let expected_output = expect![
-            "[VariableDef(VariableDef@0..8), VariableDef(VariableDef@8..18), VariableDef(VariableDef@18..27)]"
+            "[VariableDef(InfixExpr@0..8), VariableDef(InfixExpr@8..18), VariableDef(InfixExpr@18..27)]"
         ];
 
         expected_output.assert_eq(&output);

@@ -234,7 +234,50 @@ impl fmt::Display for TokenKind {
             Self::ElmtMultEquals => "'.*='",
             Self::ElmtDivEquals => "'./='",
             Self::ElmtPowEquals => "'.^='",
-            _ => todo!("Not yet implemented fmt::Display for TokenKind variant"),
+            Self::Newline => "newline",
+            Self::LBracket => "'['",
+            Self::RBracket => "']'",
+            Self::ElmtMult => "'.*'",
+            Self::ElmtDiv => "'./'",
+            Self::LeftDiv => r"'\'",
+            Self::ElmtLeftDiv => r"'.\\!",
+            Self::Caret => "'^'",
+            Self::ElmtPow => "'.^'",
+            Self::Transpose => "''",
+            Self::ElmtTranspose => "'.''",
+            Self::Not => "'!'",
+            Self::And => "'&&'",
+            Self::Or => "'||'",
+            Self::EqualsEquals => "'=='",
+            Self::NotEquals => "'!='",
+            Self::LessThan => "'<'",
+            Self::GreaterThan => "'>'",
+            Self::LessThanEquals => "'<='",
+            Self::GreaterThanEquals => "'>='",
+            Self::EndFnKw
+            | Self::IfKw
+            | Self::ElseIfKw
+            | Self::ElseKw
+            | Self::EndIfKw
+            | Self::SwitchKw
+            | Self::CaseKw
+            | Self::OtherwiseKw
+            | Self::EndSwitchKw
+            | Self::WhileKw
+            | Self::EndWhileKw
+            | Self::DoKw
+            | Self::UntilKw
+            | Self::ForKw
+            | Self::EndForKw
+            | Self::BreakKw
+            | Self::ContinueKw
+            | Self::UnwindProtectKw
+            | Self::UnwindProtectCleanupKw
+            | Self::EndUnwindProtectKw
+            | Self::TryKw
+            | Self::CatchKw
+            | Self::EndTryKw
+            | Self::EndKw => "keyword",
         })
     }
 }
