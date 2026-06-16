@@ -190,7 +190,34 @@ impl BinaryExpr {
                 if let SyntaxKind::LexToken(inner) = token.kind() {
                     matches!(
                         inner,
-                        TokenKind::Plus | TokenKind::Minus | TokenKind::Asterisk | TokenKind::Slash,
+                        TokenKind::Plus
+                            | TokenKind::Minus
+                            | TokenKind::Asterisk
+                            | TokenKind::Slash
+                            | TokenKind::ElmtMult
+                            | TokenKind::ElmtDiv
+                            | TokenKind::LeftDiv
+                            | TokenKind::ElmtLeftDiv
+                            | TokenKind::Caret
+                            | TokenKind::ElmtPow
+                            | TokenKind::Colon
+                            | TokenKind::EqualsEquals
+                            | TokenKind::NotEquals
+                            | TokenKind::LessThan
+                            | TokenKind::GreaterThan
+                            | TokenKind::LessThanEquals
+                            | TokenKind::GreaterThanEquals
+                            | TokenKind::TildeEquals
+                            | TokenKind::And
+                            | TokenKind::Or
+                            | TokenKind::Equals
+                            | TokenKind::PlusEquals
+                            | TokenKind::MinusEquals
+                            | TokenKind::AsteriskEquals
+                            | TokenKind::SlashEquals
+                            | TokenKind::ElmtMultEquals
+                            | TokenKind::ElmtDivEquals
+                            | TokenKind::ElmtPowEquals
                     )
                 } else {
                     false
@@ -208,7 +235,17 @@ impl UnaryExpr {
         self.0
             .children_with_tokens()
             .filter_map(SyntaxElement::into_token)
-            .find(|token| token.kind() == TokenKind::Minus.into())
+            .find(|token| {
+                matches!(
+                    token.kind(),
+                    SyntaxKind::LexToken(
+                        TokenKind::Minus
+                            | TokenKind::Plus
+                            | TokenKind::Not
+                            | TokenKind::Tilde
+                    )
+                )
+            })
     }
 }
 
@@ -276,6 +313,63 @@ impl PostfixExpr {
 impl FnDef {
     pub fn body(&self) -> impl Iterator<Item = Stmt> {
         self.0.children().filter_map(Stmt::cast).skip(1)
+    }
+}
+
+impl IfStmt {
+    #[must_use]
+    pub fn condition(&self) -> Option<Expr> {
+        self.0.children().find_map(Expr::cast)
+    }
+
+    pub fn body(&self) -> impl Iterator<Item = Stmt> {
+        self.0.children().filter_map(Stmt::cast).skip(1)
+    }
+}
+
+impl WhileLoop {
+    #[must_use]
+    pub fn condition(&self) -> Option<Expr> {
+        self.0.children().find_map(Expr::cast)
+    }
+
+    pub fn body(&self) -> impl Iterator<Item = Stmt> {
+        self.0.children().filter_map(Stmt::cast).skip(1)
+    }
+}
+
+impl ForLoop {
+    pub fn body(&self) -> impl Iterator<Item = Stmt> {
+        self.0.children().filter_map(Stmt::cast).skip(1)
+    }
+}
+
+impl SwitchStmt {
+    #[must_use]
+    pub fn condition(&self) -> Option<Expr> {
+        self.0.children().find_map(Expr::cast)
+    }
+
+    pub fn body(&self) -> impl Iterator<Item = Stmt> {
+        self.0.children().filter_map(Stmt::cast).skip(1)
+    }
+}
+
+impl MatrixExpr {
+    pub fn elements(&self) -> impl Iterator<Item = Expr> {
+        self.0.children().filter_map(Expr::cast)
+    }
+}
+
+impl RangeExpr {
+    #[must_use]
+    pub fn lhs(&self) -> Option<Expr> {
+        self.0.children().find_map(Expr::cast)
+    }
+
+    #[must_use]
+    pub fn rhs(&self) -> Option<Expr> {
+        self.0.children().filter_map(Expr::cast).nth(1)
     }
 }
 

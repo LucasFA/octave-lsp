@@ -11,6 +11,13 @@ type ExprIdx = Idx<Expr>;
 #[derive(Debug, PartialEq)]
 pub enum Stmt {
     VariableDef { name: SmolStr, value: Expr },
+    FnDef { body: Vec<Stmt> },
+    If { condition: ExprIdx, body: Vec<Stmt> },
+    ForLoop { body: Vec<Stmt> },
+    WhileLoop { condition: ExprIdx, body: Vec<Stmt> },
+    Switch { condition: ExprIdx, body: Vec<Stmt> },
+    Break,
+    Continue,
     Expr(Expr),
 }
 
@@ -32,6 +39,17 @@ pub enum Expr {
     VariableRef {
         var: SmolStr,
     },
+    Call {
+        func: ExprIdx,
+        args: Vec<ExprIdx>,
+    },
+    Matrix {
+        elements: Vec<ExprIdx>,
+    },
+    Range {
+        lhs: ExprIdx,
+        rhs: ExprIdx,
+    },
 }
 
 #[derive(Debug, PartialEq)]
@@ -40,11 +58,37 @@ pub enum BinaryOp {
     Sub,
     Mul,
     Div,
+    ElmtMult,
+    ElmtDiv,
+    LeftDiv,
+    ElmtLeftDiv,
+    Pow,
+    ElmtPow,
+    Colon,
+    EqualsEquals,
+    NotEquals,
+    LessThan,
+    GreaterThan,
+    LessThanEquals,
+    GreaterThanEquals,
+    And,
+    Or,
+    Assign,
+    PlusEquals,
+    MinusEquals,
+    AsteriskEquals,
+    SlashEquals,
+    ElmtMultEquals,
+    ElmtDivEquals,
+    ElmtPowEquals,
 }
 
 #[derive(Debug, PartialEq)]
 pub enum UnaryOp {
     Neg,
+    Plus,
+    Not,
+    Tilde,
 }
 
 #[must_use]

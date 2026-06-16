@@ -14,14 +14,36 @@ impl Database {
                 name: ast.name()?.text().into(),
                 value: self.lower_expr(ast.value()),
             },
+            ast::Stmt::FnDef(ast) => Stmt::FnDef {
+                body: ast.body().filter_map(|s| self.lower_stmt(s)).collect(),
+            },
+            ast::Stmt::IfStmt(ast) => {
+                let condition = self.lower_expr(ast.condition());
+                Stmt::If {
+                    condition: self.exprs.alloc(condition),
+                    body: ast.body().filter_map(|s| self.lower_stmt(s)).collect(),
+                }
+            }
+            ast::Stmt::ForLoop(ast) => Stmt::ForLoop {
+                body: ast.body().filter_map(|s| self.lower_stmt(s)).collect(),
+            },
+            ast::Stmt::WhileLoop(ast) => {
+                let condition = self.lower_expr(ast.condition());
+                Stmt::WhileLoop {
+                    condition: self.exprs.alloc(condition),
+                    body: ast.body().filter_map(|s| self.lower_stmt(s)).collect(),
+                }
+            }
+            ast::Stmt::BreakStmt(_) => Stmt::Break,
+            ast::Stmt::ContinueStmt(_) => Stmt::Continue,
+            ast::Stmt::SwitchStmt(ast) => {
+                let condition = self.lower_expr(ast.condition());
+                Stmt::Switch {
+                    condition: self.exprs.alloc(condition),
+                    body: ast.body().filter_map(|s| self.lower_stmt(s)).collect(),
+                }
+            }
             ast::Stmt::Expr(ast) => Stmt::Expr(self.lower_expr(Some(ast))),
-            ast::Stmt::FnDef(_)
-            | ast::Stmt::IfStmt(_)
-            | ast::Stmt::ForLoop(_)
-            | ast::Stmt::WhileLoop(_)
-            | ast::Stmt::BreakStmt(_)
-            | ast::Stmt::ContinueStmt(_)
-            | ast::Stmt::SwitchStmt(_) => return None,
         };
 
         Some(result)
@@ -35,10 +57,10 @@ impl Database {
                 ast::Expr::ParenExpr(ast) => self.lower_expr(ast.expr()),
                 ast::Expr::UnaryExpr(ast) => self.lower_unary(&ast),
                 ast::Expr::VariableRef(ast) => Database::lower_variable_ref(&ast),
-                ast::Expr::MatrixExpr(_)
-                | ast::Expr::CallExpr(_)
-                | ast::Expr::PostfixExpr(_)
-                | ast::Expr::RangeExpr(_) => Expr::Missing,
+                ast::Expr::MatrixExpr(ast) => self.lower_matrix(&ast),
+                ast::Expr::CallExpr(ast) => self.lower_call(&ast),
+                ast::Expr::PostfixExpr(_) => Expr::Missing, // TODO: implement postfix lowering
+                ast::Expr::RangeExpr(ast) => self.lower_range(&ast),
             }
         } else {
             Expr::Missing
@@ -52,27 +74,67 @@ impl Database {
     }
 
     fn lower_binary(&mut self, ast: &ast::BinaryExpr) -> Expr {
-        let op = match ast.op().unwrap().kind() {
-            SyntaxKind::LexToken(TokenKind::Plus) => BinaryOp::Add,
-            SyntaxKind::LexToken(TokenKind::Minus) => BinaryOp::Sub,
-            SyntaxKind::LexToken(TokenKind::Asterisk) => BinaryOp::Mul,
-            SyntaxKind::LexToken(TokenKind::Slash) => BinaryOp::Div,
-            _ => unreachable!(),
+        let SyntaxKind::LexToken(token_kind) = ast.op().unwrap().kind() else {
+            unreachable!()
         };
 
         let lhs = self.lower_expr(ast.lhs());
         let rhs = self.lower_expr(ast.rhs());
 
-        Expr::Binary {
-            op,
-            lhs: self.exprs.alloc(lhs),
-            rhs: self.exprs.alloc(rhs),
+        match token_kind {
+            TokenKind::Colon => Expr::Range {
+                lhs: self.exprs.alloc(lhs),
+                rhs: self.exprs.alloc(rhs),
+            },
+            kind => {
+                let op = match kind {
+                    TokenKind::Plus => BinaryOp::Add,
+                    TokenKind::Minus => BinaryOp::Sub,
+                    TokenKind::Asterisk => BinaryOp::Mul,
+                    TokenKind::Slash => BinaryOp::Div,
+                    TokenKind::ElmtMult => BinaryOp::ElmtMult,
+                    TokenKind::ElmtDiv => BinaryOp::ElmtDiv,
+                    TokenKind::LeftDiv => BinaryOp::LeftDiv,
+                    TokenKind::ElmtLeftDiv => BinaryOp::ElmtLeftDiv,
+                    TokenKind::Caret => BinaryOp::Pow,
+                    TokenKind::ElmtPow => BinaryOp::ElmtPow,
+                    TokenKind::EqualsEquals => BinaryOp::EqualsEquals,
+                    TokenKind::NotEquals | TokenKind::TildeEquals => BinaryOp::NotEquals,
+                    TokenKind::LessThan => BinaryOp::LessThan,
+                    TokenKind::GreaterThan => BinaryOp::GreaterThan,
+                    TokenKind::LessThanEquals => BinaryOp::LessThanEquals,
+                    TokenKind::GreaterThanEquals => BinaryOp::GreaterThanEquals,
+                    TokenKind::And => BinaryOp::And,
+                    TokenKind::Or => BinaryOp::Or,
+                    TokenKind::Equals => BinaryOp::Assign,
+                    TokenKind::PlusEquals => BinaryOp::PlusEquals,
+                    TokenKind::MinusEquals => BinaryOp::MinusEquals,
+                    TokenKind::AsteriskEquals => BinaryOp::AsteriskEquals,
+                    TokenKind::SlashEquals => BinaryOp::SlashEquals,
+                    TokenKind::ElmtMultEquals => BinaryOp::ElmtMultEquals,
+                    TokenKind::ElmtDivEquals => BinaryOp::ElmtDivEquals,
+                    TokenKind::ElmtPowEquals => BinaryOp::ElmtPowEquals,
+                    _ => unreachable!(),
+                };
+                Expr::Binary {
+                    op,
+                    lhs: self.exprs.alloc(lhs),
+                    rhs: self.exprs.alloc(rhs),
+                }
+            }
         }
     }
 
     fn lower_unary(&mut self, ast: &ast::UnaryExpr) -> Expr {
-        let op = match ast.op().unwrap().kind() {
-            SyntaxKind::LexToken(TokenKind::Minus) => UnaryOp::Neg,
+        let SyntaxKind::LexToken(token_kind) = ast.op().unwrap().kind() else {
+            unreachable!()
+        };
+
+        let op = match token_kind {
+            TokenKind::Minus => UnaryOp::Neg,
+            TokenKind::Plus => UnaryOp::Plus,
+            TokenKind::Not => UnaryOp::Not,
+            TokenKind::Tilde => UnaryOp::Tilde,
             _ => unreachable!(),
         };
 
@@ -81,6 +143,34 @@ impl Database {
         Expr::Unary {
             op,
             expr: self.exprs.alloc(expr),
+        }
+    }
+
+    fn lower_call(&mut self, ast: &ast::CallExpr) -> Expr {
+        let func = self.lower_expr(ast.func());
+        let args: Vec<_> = ast.args().map(|e| self.lower_expr(Some(e))).collect();
+        Expr::Call {
+            func: self.exprs.alloc(func),
+            args: args.into_iter().map(|e| self.exprs.alloc(e)).collect(),
+        }
+    }
+
+    fn lower_matrix(&mut self, ast: &ast::MatrixExpr) -> Expr {
+        let elements: Vec<_> = ast
+            .elements()
+            .map(|e| self.lower_expr(Some(e)))
+            .collect();
+        Expr::Matrix {
+            elements: elements.into_iter().map(|e| self.exprs.alloc(e)).collect(),
+        }
+    }
+
+    fn lower_range(&mut self, ast: &ast::RangeExpr) -> Expr {
+        let lhs = self.lower_expr(ast.lhs());
+        let rhs = self.lower_expr(ast.rhs());
+        Expr::Range {
+            lhs: self.exprs.alloc(lhs),
+            rhs: self.exprs.alloc(rhs),
         }
     }
 }
@@ -232,5 +322,146 @@ mod tests {
             },
             Database { exprs },
         );
+    }
+
+    #[test]
+    fn lower_binary_elmt_mult() {
+        let mut exprs = Arena::new();
+        let lhs = exprs.alloc(Expr::Literal { n: Some(2) });
+        let rhs = exprs.alloc(Expr::Literal { n: Some(3) });
+
+        check_expr(
+            "2 .* 3",
+            Expr::Binary {
+                lhs,
+                rhs,
+                op: BinaryOp::ElmtMult,
+            },
+            Database { exprs },
+        );
+    }
+
+    #[test]
+    fn lower_binary_pow() {
+        let mut exprs = Arena::new();
+        let lhs = exprs.alloc(Expr::Literal { n: Some(2) });
+        let rhs = exprs.alloc(Expr::Literal { n: Some(3) });
+
+        check_expr(
+            "2 ^ 3",
+            Expr::Binary {
+                lhs,
+                rhs,
+                op: BinaryOp::Pow,
+            },
+            Database { exprs },
+        );
+    }
+
+    #[test]
+    fn lower_range() {
+        let mut exprs = Arena::new();
+        let lhs = exprs.alloc(Expr::Literal { n: Some(1) });
+        let rhs = exprs.alloc(Expr::Literal { n: Some(10) });
+
+        check_expr(
+            "1:10",
+            Expr::Range { lhs, rhs },
+            Database { exprs },
+        );
+    }
+
+    #[test]
+    fn lower_call_no_args() {
+        let mut exprs = Arena::new();
+        let func = exprs.alloc(Expr::VariableRef { var: "f".into() });
+
+        check_expr(
+            "f()",
+            Expr::Call {
+                func,
+                args: vec![],
+            },
+            Database { exprs },
+        );
+    }
+
+    #[test]
+    fn lower_call_one_arg() {
+        let mut exprs = Arena::new();
+        let func = exprs.alloc(Expr::VariableRef { var: "f".into() });
+        let arg = exprs.alloc(Expr::Literal { n: Some(42) });
+
+        check_expr(
+            "f(42)",
+            Expr::Call {
+                func,
+                args: vec![arg],
+            },
+            Database { exprs },
+        );
+    }
+
+    #[test]
+    fn lower_matrix_2d() {
+        let mut exprs = Arena::new();
+        let e1 = exprs.alloc(Expr::Literal { n: Some(1) });
+        let e2 = exprs.alloc(Expr::Literal { n: Some(2) });
+        let e3 = exprs.alloc(Expr::Literal { n: Some(3) });
+        let e4 = exprs.alloc(Expr::Literal { n: Some(4) });
+
+        check_expr(
+            "[1, 2; 3, 4]",
+            Expr::Matrix {
+                elements: vec![e1, e2, e3, e4],
+            },
+            Database { exprs },
+        );
+    }
+
+    #[test]
+    fn lower_if_stmt() {
+        let mut exprs = Arena::new();
+        let condition = exprs.alloc(Expr::VariableRef { var: "x".into() });
+
+        check_stmt(
+            "if x\n  y\nendif",
+            Stmt::If {
+                condition,
+                body: vec![Stmt::Expr(Expr::VariableRef { var: "y".into() })],
+            },
+        );
+    }
+
+    #[test]
+    fn lower_while_loop() {
+        let mut exprs = Arena::new();
+        let condition = exprs.alloc(Expr::Literal { n: Some(1) });
+        let x_ref = exprs.alloc(Expr::VariableRef { var: "x".into() });
+
+        check_stmt(
+            "while 1\n  x = x + 1\nendwhile",
+            Stmt::WhileLoop {
+                condition,
+                body: vec![Stmt::VariableDef {
+                    name: "x".into(),
+                    value: Expr::Binary {
+                        op: BinaryOp::Add,
+                        lhs: x_ref,
+                        rhs: exprs.alloc(Expr::Literal { n: Some(1) }),
+                    },
+                }],
+            },
+        );
+    }
+
+    #[test]
+    fn lower_break() {
+        check_stmt("break", Stmt::Break);
+    }
+
+    #[test]
+    fn lower_continue() {
+        check_stmt("continue", Stmt::Continue);
     }
 }
