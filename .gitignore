@@ -16,3 +16,6 @@ editors/code/*.vsix
 editors/code/out
 editors/code/*.js
 editors/code/*.js.map
+
+# Server binaries (built by CI, symlinked for dev)
+editors/code/server/*/octave-lsp
