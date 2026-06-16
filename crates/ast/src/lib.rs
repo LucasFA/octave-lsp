@@ -42,7 +42,6 @@ impl_typed_syntax_node!(Root);
 impl_typed_syntax_node!(MatrixExpr);
 impl_typed_syntax_node!(CallExpr);
 impl_typed_syntax_node!(PostfixExpr);
-impl_typed_syntax_node!(RangeExpr);
 impl_typed_syntax_node!(FnDef);
 impl_typed_syntax_node!(IfStmt);
 impl_typed_syntax_node!(ForLoop);
@@ -50,19 +49,16 @@ impl_typed_syntax_node!(WhileLoop);
 impl_typed_syntax_node!(BreakStmt);
 impl_typed_syntax_node!(ContinueStmt);
 impl_typed_syntax_node!(SwitchStmt);
+impl_typed_syntax_node!(TryStmt);
+impl_typed_syntax_node!(UnwindProtectStmt);
 
 #[derive(Debug)]
 pub struct VariableDef(SyntaxNode);
-
-const _: () = {
-    const _: SyntaxConstruct = SyntaxConstruct::VariableDef;
-};
 
 impl VariableDef {
     #[must_use]
     pub fn cast(node: SyntaxNode) -> Option<Self> {
         match node.kind() {
-            SyntaxKind::SyntaxConstruct(SyntaxConstruct::VariableDef) => Some(Self(node)),
             SyntaxKind::SyntaxConstruct(SyntaxConstruct::InfixExpr) => {
                 let is_assign = node
                     .children_with_tokens()
@@ -153,8 +149,7 @@ impl Expr {
                 SyntaxConstruct::MatrixExpr => Self::MatrixExpr(MatrixExpr(node)),
                 SyntaxConstruct::CallExpr => Self::CallExpr(CallExpr(node)),
                 SyntaxConstruct::PostfixExpr => Self::PostfixExpr(PostfixExpr(node)),
-                SyntaxConstruct::RangeExpr => Self::RangeExpr(RangeExpr(node)),
-                SyntaxConstruct::Root | SyntaxConstruct::VariableDef => unreachable!(),
+                SyntaxConstruct::Root => unreachable!(),
                 SyntaxConstruct::Error
                 | SyntaxConstruct::Block
                 | SyntaxConstruct::FnDef
@@ -163,7 +158,9 @@ impl Expr {
                 | SyntaxConstruct::WhileLoop
                 | SyntaxConstruct::BreakStmt
                 | SyntaxConstruct::ContinueStmt
-                | SyntaxConstruct::SwitchStmt => return None,
+                | SyntaxConstruct::SwitchStmt
+                | SyntaxConstruct::TryStmt
+                | SyntaxConstruct::UnwindProtectStmt => return None,
             };
         } else {
             return None;
@@ -308,6 +305,19 @@ impl PostfixExpr {
     pub fn expr(&self) -> Option<Expr> {
         self.0.children().find_map(Expr::cast)
     }
+
+    #[must_use]
+    pub fn op(&self) -> Option<SyntaxToken> {
+        self.0
+            .children_with_tokens()
+            .filter_map(SyntaxElement::into_token)
+            .find(|token| {
+                matches!(
+                    token.kind(),
+                    SyntaxKind::LexToken(TokenKind::Transpose | TokenKind::ElmtTranspose)
+                )
+            })
+    }
 }
 
 impl FnDef {
@@ -355,21 +365,21 @@ impl SwitchStmt {
     }
 }
 
-impl MatrixExpr {
-    pub fn elements(&self) -> impl Iterator<Item = Expr> {
-        self.0.children().filter_map(Expr::cast)
+impl TryStmt {
+    pub fn body(&self) -> impl Iterator<Item = Stmt> {
+        self.0.children().filter_map(Stmt::cast)
     }
 }
 
-impl RangeExpr {
-    #[must_use]
-    pub fn lhs(&self) -> Option<Expr> {
-        self.0.children().find_map(Expr::cast)
+impl UnwindProtectStmt {
+    pub fn body(&self) -> impl Iterator<Item = Stmt> {
+        self.0.children().filter_map(Stmt::cast)
     }
+}
 
-    #[must_use]
-    pub fn rhs(&self) -> Option<Expr> {
-        self.0.children().filter_map(Expr::cast).nth(1)
+impl MatrixExpr {
+    pub fn elements(&self) -> impl Iterator<Item = Expr> {
+        self.0.children().filter_map(Expr::cast)
     }
 }
 
@@ -383,6 +393,8 @@ pub enum Stmt {
     BreakStmt(BreakStmt),
     ContinueStmt(ContinueStmt),
     SwitchStmt(SwitchStmt),
+    TryStmt(TryStmt),
+    UnwindProtectStmt(UnwindProtectStmt),
     Expr(Expr),
 }
 
@@ -400,6 +412,8 @@ impl Stmt {
             SyntaxKind::SyntaxConstruct(SyntaxConstruct::BreakStmt) => Self::BreakStmt(BreakStmt(node)),
             SyntaxKind::SyntaxConstruct(SyntaxConstruct::ContinueStmt) => Self::ContinueStmt(ContinueStmt(node)),
             SyntaxKind::SyntaxConstruct(SyntaxConstruct::SwitchStmt) => Self::SwitchStmt(SwitchStmt(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::TryStmt) => Self::TryStmt(TryStmt(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::UnwindProtectStmt) => Self::UnwindProtectStmt(UnwindProtectStmt(node)),
             _ => Self::Expr(Expr::cast(node)?),
         };
         Some(result)
@@ -416,7 +430,6 @@ pub enum Expr {
     MatrixExpr(MatrixExpr),
     CallExpr(CallExpr),
     PostfixExpr(PostfixExpr),
-    RangeExpr(RangeExpr),
 }
 
 #[derive(Debug)]

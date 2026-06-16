@@ -1,4 +1,4 @@
-use crate::{BinaryOp, Expr, Stmt, UnaryOp};
+use crate::{BinaryOp, Expr, Stmt, TransposeOp, UnaryOp};
 use la_arena::Arena;
 use syntax::{SyntaxKind, TokenKind};
 
@@ -36,6 +36,14 @@ impl Database {
             }
             ast::Stmt::BreakStmt(_) => Stmt::Break,
             ast::Stmt::ContinueStmt(_) => Stmt::Continue,
+            ast::Stmt::TryStmt(ast) => Stmt::Try {
+                body: ast.body().filter_map(|s| self.lower_stmt(s)).collect(),
+                catch: vec![], // TODO: split catch body from try body by CatchKw token
+            },
+            ast::Stmt::UnwindProtectStmt(ast) => Stmt::UnwindProtect {
+                body: ast.body().filter_map(|s| self.lower_stmt(s)).collect(),
+                cleanup: vec![], // TODO: split cleanup body by UnwindProtectCleanupKw token
+            },
             ast::Stmt::SwitchStmt(ast) => {
                 let condition = self.lower_expr(ast.condition());
                 Stmt::Switch {
@@ -59,8 +67,7 @@ impl Database {
                 ast::Expr::VariableRef(ast) => Database::lower_variable_ref(&ast),
                 ast::Expr::MatrixExpr(ast) => self.lower_matrix(&ast),
                 ast::Expr::CallExpr(ast) => self.lower_call(&ast),
-                ast::Expr::PostfixExpr(_) => Expr::Missing, // TODO: implement postfix lowering
-                ast::Expr::RangeExpr(ast) => self.lower_range(&ast),
+                ast::Expr::PostfixExpr(ast) => self.lower_postfix(&ast),
             }
         } else {
             Expr::Missing
@@ -165,14 +172,19 @@ impl Database {
         }
     }
 
-    fn lower_range(&mut self, ast: &ast::RangeExpr) -> Expr {
-        let lhs = self.lower_expr(ast.lhs());
-        let rhs = self.lower_expr(ast.rhs());
-        Expr::Range {
-            lhs: self.exprs.alloc(lhs),
-            rhs: self.exprs.alloc(rhs),
+    fn lower_postfix(&mut self, ast: &ast::PostfixExpr) -> Expr {
+        let op = match ast.op().unwrap().kind() {
+            SyntaxKind::LexToken(TokenKind::Transpose) => TransposeOp::Normal,
+            SyntaxKind::LexToken(TokenKind::ElmtTranspose) => TransposeOp::Elmt,
+            _ => unreachable!(),
+        };
+        let expr = self.lower_expr(ast.expr());
+        Expr::Transpose {
+            op,
+            expr: self.exprs.alloc(expr),
         }
     }
+
 }
 
 #[cfg(test)]
@@ -463,5 +475,75 @@ mod tests {
     #[test]
     fn lower_continue() {
         check_stmt("continue", Stmt::Continue);
+    }
+
+    #[test]
+    fn lower_transpose() {
+        let mut exprs = Arena::new();
+        let var = exprs.alloc(Expr::VariableRef { var: "a".into() });
+
+        check_expr(
+            "a'",
+            Expr::Transpose {
+                op: TransposeOp::Normal,
+                expr: var,
+            },
+            Database { exprs },
+        );
+    }
+
+    #[test]
+    fn lower_elmt_transpose() {
+        let mut exprs = Arena::new();
+        let var = exprs.alloc(Expr::VariableRef { var: "a".into() });
+
+        check_expr(
+            "a.'",
+            Expr::Transpose {
+                op: TransposeOp::Elmt,
+                expr: var,
+            },
+            Database { exprs },
+        );
+    }
+
+    #[test]
+    fn lower_try_catch() {
+        check_stmt(
+            "try\n  x = 1\ncatch\n  x = 2\nend_try_catch",
+            Stmt::Try {
+                body: vec![
+                    Stmt::VariableDef {
+                        name: "x".into(),
+                        value: Expr::Literal { n: Some(1) },
+                    },
+                    Stmt::VariableDef {
+                        name: "x".into(),
+                        value: Expr::Literal { n: Some(2) },
+                    },
+                ],
+                catch: vec![],
+            },
+        );
+    }
+
+    #[test]
+    fn lower_unwind_protect() {
+        check_stmt(
+            "unwind_protect\n  x = 1\nunwind_protect_cleanup\n  x = 2\nend_unwind_protect",
+            Stmt::UnwindProtect {
+                body: vec![
+                    Stmt::VariableDef {
+                        name: "x".into(),
+                        value: Expr::Literal { n: Some(1) },
+                    },
+                    Stmt::VariableDef {
+                        name: "x".into(),
+                        value: Expr::Literal { n: Some(2) },
+                    },
+                ],
+                cleanup: vec![],
+            },
+        );
     }
 }

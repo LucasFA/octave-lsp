@@ -12,6 +12,10 @@ pub(super) fn stmt(p: &mut Parser) -> Option<CompletedMarker> {
         Some(while_loop(p))
     } else if p.at(TokenKind::SwitchKw) {
         Some(switch_stmt(p))
+    } else if p.at(TokenKind::TryKw) {
+        Some(try_catch_stmt(p))
+    } else if p.at(TokenKind::UnwindProtectKw) {
+        Some(unwind_protect_stmt(p))
     } else if p.at(TokenKind::BreakKw) {
         Some(break_stmt(p))
     } else if p.at(TokenKind::ContinueKw) {
@@ -149,6 +153,52 @@ fn switch_stmt(p: &mut Parser) -> CompletedMarker {
     }
 
     m.complete(p, SyntaxConstruct::SwitchStmt.into())
+}
+
+fn try_catch_stmt(p: &mut Parser) -> CompletedMarker {
+    let m = p.start();
+    p.bump(); // try
+
+    // Parse body until catch or end_try_catch
+    loop {
+        if p.at(TokenKind::CatchKw) {
+            p.bump();
+            continue;
+        }
+        if p.at(TokenKind::EndTryKw) || p.at(TokenKind::EndKw) {
+            p.bump();
+            break;
+        }
+        if p.at_end() {
+            break;
+        }
+        stmt(p);
+    }
+
+    m.complete(p, SyntaxConstruct::TryStmt.into())
+}
+
+fn unwind_protect_stmt(p: &mut Parser) -> CompletedMarker {
+    let m = p.start();
+    p.bump(); // unwind_protect
+
+    // Parse body until cleanup or end_unwind_protect
+    loop {
+        if p.at(TokenKind::UnwindProtectCleanupKw) {
+            p.bump();
+            continue;
+        }
+        if p.at(TokenKind::EndUnwindProtectKw) || p.at(TokenKind::EndKw) {
+            p.bump();
+            break;
+        }
+        if p.at_end() {
+            break;
+        }
+        stmt(p);
+    }
+
+    m.complete(p, SyntaxConstruct::UnwindProtectStmt.into())
 }
 
 fn break_stmt(p: &mut Parser) -> CompletedMarker {
@@ -569,5 +619,75 @@ Root@0..44
                       Number@28..29 "2"
                       Newline@29..30 "\n"
                 EndKw@30..33 "end""#]]);
+    }
+
+    #[test]
+    fn parse_try_catch() {
+        check(
+            "try\n  x = 1\ncatch\n  x = 2\nend_try_catch",
+            expect![[r#"
+                Root@0..39
+                  TryStmt@0..39
+                    TryKw@0..3 "try"
+                    Newline@3..4 "\n"
+                    Whitespace@4..6 "  "
+                    InfixExpr@6..12
+                      VariableRef@6..8
+                        Identifier@6..7 "x"
+                        Whitespace@7..8 " "
+                      Equals@8..9 "="
+                      Whitespace@9..10 " "
+                      Literal@10..12
+                        Number@10..11 "1"
+                        Newline@11..12 "\n"
+                    CatchKw@12..17 "catch"
+                    Newline@17..18 "\n"
+                    Whitespace@18..20 "  "
+                    InfixExpr@20..26
+                      VariableRef@20..22
+                        Identifier@20..21 "x"
+                        Whitespace@21..22 " "
+                      Equals@22..23 "="
+                      Whitespace@23..24 " "
+                      Literal@24..26
+                        Number@24..25 "2"
+                        Newline@25..26 "\n"
+                    EndTryKw@26..39 "end_try_catch""#]],
+        );
+    }
+
+    #[test]
+    fn parse_unwind_protect() {
+        check(
+            "unwind_protect\n  x = 1\nunwind_protect_cleanup\n  x = 2\nend_unwind_protect",
+            expect![[r#"
+                Root@0..72
+                  UnwindProtectStmt@0..72
+                    UnwindProtectKw@0..14 "unwind_protect"
+                    Newline@14..15 "\n"
+                    Whitespace@15..17 "  "
+                    InfixExpr@17..23
+                      VariableRef@17..19
+                        Identifier@17..18 "x"
+                        Whitespace@18..19 " "
+                      Equals@19..20 "="
+                      Whitespace@20..21 " "
+                      Literal@21..23
+                        Number@21..22 "1"
+                        Newline@22..23 "\n"
+                    UnwindProtectCleanupKw@23..45 "unwind_protect_cleanup"
+                    Newline@45..46 "\n"
+                    Whitespace@46..48 "  "
+                    InfixExpr@48..54
+                      VariableRef@48..50
+                        Identifier@48..49 "x"
+                        Whitespace@49..50 " "
+                      Equals@50..51 "="
+                      Whitespace@51..52 " "
+                      Literal@52..54
+                        Number@52..53 "2"
+                        Newline@53..54 "\n"
+                    EndUnwindProtectKw@54..72 "end_unwind_protect""#]],
+        );
     }
 }

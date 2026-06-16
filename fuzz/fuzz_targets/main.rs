@@ -1,5 +1,6 @@
 #![no_main]
 
+use ast::TypedSyntaxNode;
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {
@@ -8,6 +9,6 @@ fuzz_target!(|data: &[u8]| {
         let syntax = parse.syntax();
         let _validation_errors = ast::validation::validate(&syntax);
         let root = ast::Root::cast(syntax).unwrap();
-        let (_database, _stmts) = hir::lower(root);
+        let (_database, _stmts) = hir::lower(&root);
     }
 });

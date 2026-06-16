@@ -16,6 +16,8 @@ pub enum Stmt {
     ForLoop { body: Vec<Stmt> },
     WhileLoop { condition: ExprIdx, body: Vec<Stmt> },
     Switch { condition: ExprIdx, body: Vec<Stmt> },
+    Try { body: Vec<Stmt>, catch: Vec<Stmt> },
+    UnwindProtect { body: Vec<Stmt>, cleanup: Vec<Stmt> },
     Break,
     Continue,
     Expr(Expr),
@@ -49,6 +51,10 @@ pub enum Expr {
     Range {
         lhs: ExprIdx,
         rhs: ExprIdx,
+    },
+    Transpose {
+        op: TransposeOp,
+        expr: ExprIdx,
     },
 }
 
@@ -89,6 +95,12 @@ pub enum UnaryOp {
     Plus,
     Not,
     Tilde,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum TransposeOp {
+    Normal,
+    Elmt,
 }
 
 #[must_use]
