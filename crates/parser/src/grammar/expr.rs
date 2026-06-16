@@ -31,7 +31,7 @@ enum BinaryOp {
 impl BinaryOp {
     fn binding_power(&self) -> (u8, u8) {
         match self {
-            Self::Assign => (0, 1),
+            Self::Assign => (1, 0),
             Self::Or => (1, 2),
             Self::And => (3, 4),
             Self::Eq | Self::Neq | Self::Lt | Self::Gt | Self::Le | Self::Ge => (5, 6),
@@ -546,7 +546,7 @@ Root@0..19
                     LParen@0..1 "("
                     VariableRef@1..4
                       Identifier@1..4 "foo"
-                error at 1..4: expected '', '.'', '(', '+', '-', '*', '/', '.*', './', '\', '.\\!, '^', '.^', '==', '!=', '<', '>', '<=', '>=', '~=', '&&', '||', ':', '=' or ')'"#]],
+                error at 1..4: expected '', '.'', '(', '+', '-', '*', '/', '.*', './', '\', '.\', '^', '.^', '==', '!=', '<', '>', '<=', '>=', '~=', '&&', '||', ':', '=' or ')'"#]],
         );
     }
 

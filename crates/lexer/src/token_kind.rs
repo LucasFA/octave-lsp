@@ -240,7 +240,7 @@ impl fmt::Display for TokenKind {
             Self::ElmtMult => "'.*'",
             Self::ElmtDiv => "'./'",
             Self::LeftDiv => r"'\'",
-            Self::ElmtLeftDiv => r"'.\\!",
+            Self::ElmtLeftDiv => r"'.\'",
             Self::Caret => "'^'",
             Self::ElmtPow => "'.^'",
             Self::Transpose => "''",
