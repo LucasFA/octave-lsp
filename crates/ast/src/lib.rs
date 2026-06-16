@@ -65,11 +65,7 @@ impl VariableDef {
                     .children_with_tokens()
                     .filter_map(SyntaxElement::into_token)
                     .any(|token| token.kind() == SyntaxKind::LexToken(TokenKind::Equals));
-                if is_assign {
-                    Some(Self(node))
-                } else {
-                    None
-                }
+                if is_assign { Some(Self(node)) } else { None }
             }
             _ => None,
         }
@@ -232,10 +228,7 @@ impl UnaryExpr {
                 matches!(
                     token.kind(),
                     SyntaxKind::LexToken(
-                        TokenKind::Minus
-                            | TokenKind::Plus
-                            | TokenKind::Not
-                            | TokenKind::Tilde
+                        TokenKind::Minus | TokenKind::Plus | TokenKind::Not | TokenKind::Tilde
                     )
                 )
             })
@@ -434,12 +427,22 @@ impl Stmt {
             SyntaxKind::SyntaxConstruct(SyntaxConstruct::FnDef) => Self::FnDef(FnDef(node)),
             SyntaxKind::SyntaxConstruct(SyntaxConstruct::IfStmt) => Self::IfStmt(IfStmt(node)),
             SyntaxKind::SyntaxConstruct(SyntaxConstruct::ForLoop) => Self::ForLoop(ForLoop(node)),
-            SyntaxKind::SyntaxConstruct(SyntaxConstruct::WhileLoop) => Self::WhileLoop(WhileLoop(node)),
-            SyntaxKind::SyntaxConstruct(SyntaxConstruct::BreakStmt) => Self::BreakStmt(BreakStmt(node)),
-            SyntaxKind::SyntaxConstruct(SyntaxConstruct::ContinueStmt) => Self::ContinueStmt(ContinueStmt(node)),
-            SyntaxKind::SyntaxConstruct(SyntaxConstruct::SwitchStmt) => Self::SwitchStmt(SwitchStmt(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::WhileLoop) => {
+                Self::WhileLoop(WhileLoop(node))
+            }
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::BreakStmt) => {
+                Self::BreakStmt(BreakStmt(node))
+            }
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::ContinueStmt) => {
+                Self::ContinueStmt(ContinueStmt(node))
+            }
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::SwitchStmt) => {
+                Self::SwitchStmt(SwitchStmt(node))
+            }
             SyntaxKind::SyntaxConstruct(SyntaxConstruct::TryStmt) => Self::TryStmt(TryStmt(node)),
-            SyntaxKind::SyntaxConstruct(SyntaxConstruct::UnwindProtectStmt) => Self::UnwindProtectStmt(UnwindProtectStmt(node)),
+            SyntaxKind::SyntaxConstruct(SyntaxConstruct::UnwindProtectStmt) => {
+                Self::UnwindProtectStmt(UnwindProtectStmt(node))
+            }
             _ => Self::Expr(Expr::cast(node)?),
         };
         Some(result)

@@ -68,7 +68,9 @@ impl Database {
                 ast::Expr::MatrixExpr(ast) => self.lower_matrix(&ast),
                 ast::Expr::CallExpr(ast) => self.lower_call(&ast),
                 ast::Expr::PostfixExpr(ast) => self.lower_postfix(&ast),
-                ast::Expr::StringLiteral(ast) => Expr::String { value: ast.value().into() },
+                ast::Expr::StringLiteral(ast) => Expr::String {
+                    value: ast.value().into(),
+                },
             }
         } else {
             Expr::Missing
@@ -164,10 +166,7 @@ impl Database {
     }
 
     fn lower_matrix(&mut self, ast: &ast::MatrixExpr) -> Expr {
-        let elements: Vec<_> = ast
-            .elements()
-            .map(|e| self.lower_expr(Some(e)))
-            .collect();
+        let elements: Vec<_> = ast.elements().map(|e| self.lower_expr(Some(e))).collect();
         Expr::Matrix {
             elements: elements.into_iter().map(|e| self.exprs.alloc(e)).collect(),
         }
@@ -185,7 +184,6 @@ impl Database {
             expr: self.exprs.alloc(expr),
         }
     }
-
 }
 
 #[cfg(test)]
@@ -377,11 +375,7 @@ mod tests {
         let lhs = exprs.alloc(Expr::Literal { n: Some(1) });
         let rhs = exprs.alloc(Expr::Literal { n: Some(10) });
 
-        check_expr(
-            "1:10",
-            Expr::Range { lhs, rhs },
-            Database { exprs },
-        );
+        check_expr("1:10", Expr::Range { lhs, rhs }, Database { exprs });
     }
 
     #[test]
@@ -389,14 +383,7 @@ mod tests {
         let mut exprs = Arena::new();
         let func = exprs.alloc(Expr::VariableRef { var: "f".into() });
 
-        check_expr(
-            "f()",
-            Expr::Call {
-                func,
-                args: vec![],
-            },
-            Database { exprs },
-        );
+        check_expr("f()", Expr::Call { func, args: vec![] }, Database { exprs });
     }
 
     #[test]
@@ -561,13 +548,7 @@ mod tests {
 
     #[test]
     fn lower_string_empty() {
-        check_expr(
-            "''",
-            Expr::String {
-                value: "".into(),
-            },
-            Database::default(),
-        );
+        check_expr("''", Expr::String { value: "".into() }, Database::default());
     }
 
     #[test]

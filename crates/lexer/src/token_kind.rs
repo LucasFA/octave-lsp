@@ -362,7 +362,10 @@ mod tests {
     #[test]
     fn bare_dot_not_a_number() {
         let mut lexer = Lexer::new(".");
-        assert!(lexer.next().is_none(), "bare dot should not be a number token");
+        assert!(
+            lexer.next().is_none(),
+            "bare dot should not be a number token"
+        );
     }
 
     #[test]

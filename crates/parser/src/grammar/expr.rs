@@ -37,7 +37,11 @@ impl BinaryOp {
             Self::Eq | Self::Neq | Self::Lt | Self::Gt | Self::Le | Self::Ge => (5, 6),
             Self::Colon => (7, 8),
             Self::Add | Self::Sub => (9, 10),
-            Self::Mul | Self::Div | Self::ElmtMul | Self::ElmtDiv | Self::LeftDiv
+            Self::Mul
+            | Self::Div
+            | Self::ElmtMul
+            | Self::ElmtDiv
+            | Self::LeftDiv
             | Self::ElmtLeftDiv => (11, 12),
             Self::Pow | Self::ElmtPow => (13, 12),
         }
@@ -171,7 +175,9 @@ fn lhs(p: &mut Parser) -> Option<CompletedMarker> {
         literal(p)
     } else if p.at(TokenKind::Identifier) {
         variable_ref(p)
-    } else if p.at(TokenKind::Minus) || p.at(TokenKind::Plus) || p.at(TokenKind::Not)
+    } else if p.at(TokenKind::Minus)
+        || p.at(TokenKind::Plus)
+        || p.at(TokenKind::Not)
         || p.at(TokenKind::Tilde)
     {
         prefix_expr(p)
@@ -255,9 +261,12 @@ fn expr_binding_power(p: &mut Parser, minimum_binding_power: u8) -> Option<Compl
             BinaryOp::Pow
         } else if p.at(TokenKind::ElmtPow) {
             BinaryOp::ElmtPow
-        } else if p.at(TokenKind::EqualsEquals) || p.at(TokenKind::NotEquals)
-            || p.at(TokenKind::LessThan) || p.at(TokenKind::GreaterThan)
-            || p.at(TokenKind::LessThanEquals) || p.at(TokenKind::GreaterThanEquals)
+        } else if p.at(TokenKind::EqualsEquals)
+            || p.at(TokenKind::NotEquals)
+            || p.at(TokenKind::LessThan)
+            || p.at(TokenKind::GreaterThan)
+            || p.at(TokenKind::LessThanEquals)
+            || p.at(TokenKind::GreaterThanEquals)
             || p.at(TokenKind::TildeEquals)
         {
             match p.peek().unwrap() {
@@ -606,7 +615,9 @@ Root@0..19
 
     #[test]
     fn parse_elementwise_mult() {
-        check("1 .* 2", expect![[r#"
+        check(
+            "1 .* 2",
+            expect![[r#"
 Root@0..6
   InfixExpr@0..6
     Literal@0..2
@@ -615,12 +626,15 @@ Root@0..6
     ElmtMult@2..4 ".*"
     Whitespace@4..5 " "
     Literal@5..6
-      Number@5..6 "2""#]]);
+      Number@5..6 "2""#]],
+        );
     }
 
     #[test]
     fn parse_elementwise_div() {
-        check("1 ./ 2", expect![[r#"
+        check(
+            "1 ./ 2",
+            expect![[r#"
 Root@0..6
   InfixExpr@0..6
     Literal@0..2
@@ -629,12 +643,15 @@ Root@0..6
     ElmtDiv@2..4 "./"
     Whitespace@4..5 " "
     Literal@5..6
-      Number@5..6 "2""#]]);
+      Number@5..6 "2""#]],
+        );
     }
 
     #[test]
     fn parse_elementwise_pow() {
-        check("1 .^ 2", expect![[r#"
+        check(
+            "1 .^ 2",
+            expect![[r#"
 Root@0..6
   InfixExpr@0..6
     Literal@0..2
@@ -643,12 +660,15 @@ Root@0..6
     ElmtPow@2..4 ".^"
     Whitespace@4..5 " "
     Literal@5..6
-      Number@5..6 "2""#]]);
+      Number@5..6 "2""#]],
+        );
     }
 
     #[test]
     fn parse_power_right_assoc() {
-        check("1^2^3", expect![[r#"
+        check(
+            "1^2^3",
+            expect![[r#"
 Root@0..5
   InfixExpr@0..5
     Literal@0..1
@@ -659,12 +679,15 @@ Root@0..5
         Number@2..3 "2"
       Caret@3..4 "^"
       Literal@4..5
-        Number@4..5 "3""#]]);
+        Number@4..5 "3""#]],
+        );
     }
 
     #[test]
     fn parse_assignment_right_assoc() {
-        check("a = b = c", expect![[r#"
+        check(
+            "a = b = c",
+            expect![[r#"
 Root@0..9
   InfixExpr@0..9
     VariableRef@0..2
@@ -679,12 +702,15 @@ Root@0..9
       Equals@6..7 "="
       Whitespace@7..8 " "
       VariableRef@8..9
-        Identifier@8..9 "c""#]]);
+        Identifier@8..9 "c""#]],
+        );
     }
 
     #[test]
     fn parse_equality() {
-        check("1 == 2", expect![[r#"
+        check(
+            "1 == 2",
+            expect![[r#"
 Root@0..6
   InfixExpr@0..6
     Literal@0..2
@@ -693,12 +719,15 @@ Root@0..6
     EqualsEquals@2..4 "=="
     Whitespace@4..5 " "
     Literal@5..6
-      Number@5..6 "2""#]]);
+      Number@5..6 "2""#]],
+        );
     }
 
     #[test]
     fn parse_not_equals() {
-        check("1 ~= 2", expect![[r#"
+        check(
+            "1 ~= 2",
+            expect![[r#"
 Root@0..6
   InfixExpr@0..6
     Literal@0..2
@@ -707,12 +736,15 @@ Root@0..6
     TildeEquals@2..4 "~="
     Whitespace@4..5 " "
     Literal@5..6
-      Number@5..6 "2""#]]);
+      Number@5..6 "2""#]],
+        );
     }
 
     #[test]
     fn parse_logical_and() {
-        check("1 && 2", expect![[r#"
+        check(
+            "1 && 2",
+            expect![[r#"
             Root@0..6
               InfixExpr@0..6
                 Literal@0..2
@@ -721,64 +753,82 @@ Root@0..6
                 And@2..4 "&&"
                 Whitespace@4..5 " "
                 Literal@5..6
-                  Number@5..6 "2""#]]);
+                  Number@5..6 "2""#]],
+        );
     }
 
     #[test]
     fn parse_transpose() {
-        check("a'", expect![[r#"
+        check(
+            "a'",
+            expect![[r#"
 Root@0..2
   PostfixExpr@0..2
     VariableRef@0..1
       Identifier@0..1 "a"
-    Transpose@1..2 "'""#]]);
+    Transpose@1..2 "'""#]],
+        );
     }
 
     #[test]
     fn parse_elmt_transpose() {
-        check("a.'", expect![[r#"
+        check(
+            "a.'",
+            expect![[r#"
 Root@0..3
   PostfixExpr@0..3
     VariableRef@0..1
       Identifier@0..1 "a"
-    ElmtTranspose@1..3 ".'""#]]);
+    ElmtTranspose@1..3 ".'""#]],
+        );
     }
 
     #[test]
     fn parse_range() {
-        check("1:10", expect![[r#"
+        check(
+            "1:10",
+            expect![[r#"
 Root@0..4
   InfixExpr@0..4
     Literal@0..1
       Number@0..1 "1"
     Colon@1..2 ":"
     Literal@2..4
-      Number@2..4 "10""#]]);
+      Number@2..4 "10""#]],
+        );
     }
 
     #[test]
     fn parse_not_prefix() {
-        check("!1", expect![[r#"
+        check(
+            "!1",
+            expect![[r#"
 Root@0..2
   PrefixExpr@0..2
     Not@0..1 "!"
     Literal@1..2
-      Number@1..2 "1""#]]);
+      Number@1..2 "1""#]],
+        );
     }
 
     #[test]
     fn parse_tilde_prefix() {
-        check("~1", expect![[r#"
+        check(
+            "~1",
+            expect![[r#"
 Root@0..2
   PrefixExpr@0..2
     Tilde@0..1 "~"
     Literal@1..2
-      Number@1..2 "1""#]]);
+      Number@1..2 "1""#]],
+        );
     }
 
     #[test]
     fn parse_power_over_add_precedence() {
-        check("a ^ b + c", expect![[r#"
+        check(
+            "a ^ b + c",
+            expect![[r#"
             Root@0..9
               InfixExpr@0..9
                 InfixExpr@0..6
@@ -793,32 +843,41 @@ Root@0..2
                 Plus@6..7 "+"
                 Whitespace@7..8 " "
                 VariableRef@8..9
-                  Identifier@8..9 "c""#]]);
+                  Identifier@8..9 "c""#]],
+        );
     }
 
     #[test]
     fn parse_empty_matrix() {
-        check("[]", expect![[r#"
+        check(
+            "[]",
+            expect![[r#"
 Root@0..2
   MatrixExpr@0..2
     LBracket@0..1 "["
-    RBracket@1..2 "]""#]]);
+    RBracket@1..2 "]""#]],
+        );
     }
 
     #[test]
     fn parse_single_element_matrix() {
-        check("[1]", expect![[r#"
+        check(
+            "[1]",
+            expect![[r#"
 Root@0..3
   MatrixExpr@0..3
     LBracket@0..1 "["
     Literal@1..2
       Number@1..2 "1"
-    RBracket@2..3 "]""#]]);
+    RBracket@2..3 "]""#]],
+        );
     }
 
     #[test]
     fn parse_matrix_two_elements() {
-        check("[1, 2]", expect![[r#"
+        check(
+            "[1, 2]",
+            expect![[r#"
             Root@0..6
               MatrixExpr@0..6
                 LBracket@0..1 "["
@@ -828,12 +887,15 @@ Root@0..3
                 Whitespace@3..4 " "
                 Literal@4..5
                   Number@4..5 "2"
-                RBracket@5..6 "]""#]]);
+                RBracket@5..6 "]""#]],
+        );
     }
 
     #[test]
     fn parse_matrix_two_rows() {
-        check("[1; 2]", expect![[r#"
+        check(
+            "[1; 2]",
+            expect![[r#"
 Root@0..6
   MatrixExpr@0..6
     LBracket@0..1 "["
@@ -843,23 +905,29 @@ Root@0..6
     Whitespace@3..4 " "
     Literal@4..5
       Number@4..5 "2"
-    RBracket@5..6 "]""#]]);
+    RBracket@5..6 "]""#]],
+        );
     }
 
     #[test]
     fn parse_call_no_args() {
-        check("f()", expect![[r#"
+        check(
+            "f()",
+            expect![[r#"
 Root@0..3
   CallExpr@0..3
     VariableRef@0..1
       Identifier@0..1 "f"
     LParen@1..2 "("
-    RParen@2..3 ")""#]]);
+    RParen@2..3 ")""#]],
+        );
     }
 
     #[test]
     fn parse_call_one_arg() {
-        check("f(1)", expect![[r#"
+        check(
+            "f(1)",
+            expect![[r#"
 Root@0..4
   CallExpr@0..4
     VariableRef@0..1
@@ -867,12 +935,15 @@ Root@0..4
     LParen@1..2 "("
     Literal@2..3
       Number@2..3 "1"
-    RParen@3..4 ")""#]]);
+    RParen@3..4 ")""#]],
+        );
     }
 
     #[test]
     fn parse_call_two_args() {
-        check("f(1, 2)", expect![[r#"
+        check(
+            "f(1, 2)",
+            expect![[r#"
 Root@0..7
   CallExpr@0..7
     VariableRef@0..1
@@ -884,12 +955,15 @@ Root@0..7
     Whitespace@4..5 " "
     Literal@5..6
       Number@5..6 "2"
-    RParen@6..7 ")""#]]);
+    RParen@6..7 ")""#]],
+        );
     }
 
     #[test]
     fn parse_nested_calls() {
-        check("f(g(1))", expect![[r#"
+        check(
+            "f(g(1))",
+            expect![[r#"
             Root@0..7
               CallExpr@0..7
                 VariableRef@0..1
@@ -902,13 +976,16 @@ Root@0..7
                   Literal@4..5
                     Number@4..5 "1"
                   RParen@5..6 ")"
-                RParen@6..7 ")""#]]);
+                RParen@6..7 ")""#]],
+        );
     }
 
     #[test]
     fn parse_expression_followed_by_parens_is_call() {
         // (1+2)(3) — LHS is a ParenExpr, then parenthesized args
-        check("(1+2)(3)", expect![[r#"
+        check(
+            "(1+2)(3)",
+            expect![[r#"
             Root@0..8
               CallExpr@0..8
                 ParenExpr@0..5
@@ -923,31 +1000,40 @@ Root@0..7
                 LParen@5..6 "("
                 Literal@6..7
                   Number@6..7 "3"
-                RParen@7..8 ")""#]]);
+                RParen@7..8 ")""#]],
+        );
     }
 
     #[test]
     fn parse_string_literal() {
-        check("'hello'", expect![[r#"
+        check(
+            "'hello'",
+            expect![[r#"
 Root@0..7
   StringLiteral@0..7
     Transpose@0..1 "'"
     Identifier@1..6 "hello"
-    Transpose@6..7 "'""#]]);
+    Transpose@6..7 "'""#]],
+        );
     }
 
     #[test]
     fn parse_string_empty() {
-        check("''", expect![[r#"
+        check(
+            "''",
+            expect![[r#"
 Root@0..2
   StringLiteral@0..2
     Transpose@0..1 "'"
-    Transpose@1..2 "'""#]]);
+    Transpose@1..2 "'""#]],
+        );
     }
 
     #[test]
     fn parse_string_escaped_quote() {
-        check("'it''s'", expect![[r#"
+        check(
+            "'it''s'",
+            expect![[r#"
             Root@0..7
               StringLiteral@0..7
                 Transpose@0..1 "'"
@@ -955,21 +1041,27 @@ Root@0..2
                 Transpose@3..4 "'"
                 Transpose@4..5 "'"
                 Identifier@5..6 "s"
-                Transpose@6..7 "'""#]]);
+                Transpose@6..7 "'""#]],
+        );
     }
 
     #[test]
     fn parse_string_unclosed() {
-        check("'hello", expect![[r#"
+        check(
+            "'hello",
+            expect![[r#"
 Root@0..6
   StringLiteral@0..6
     Transpose@0..1 "'"
-    Identifier@1..6 "hello""#]]);
+    Identifier@1..6 "hello""#]],
+        );
     }
 
     #[test]
     fn parse_string_in_matrix() {
-        check("['a', 'b']", expect![[r#"
+        check(
+            "['a', 'b']",
+            expect![[r#"
 Root@0..10
   MatrixExpr@0..10
     LBracket@0..1 "["
@@ -983,6 +1075,7 @@ Root@0..10
       Transpose@6..7 "'"
       Identifier@7..8 "b"
       Transpose@8..9 "'"
-    RBracket@9..10 "]""#]]);
+    RBracket@9..10 "]""#]],
+        );
     }
 }

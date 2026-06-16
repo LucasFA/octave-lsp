@@ -426,23 +426,31 @@ Root@0..3
 
     #[test]
     fn parse_break() {
-        check("break", expect![[r#"
+        check(
+            "break",
+            expect![[r#"
 Root@0..5
   BreakStmt@0..5
-    BreakKw@0..5 "break""#]]);
+    BreakKw@0..5 "break""#]],
+        );
     }
 
     #[test]
     fn parse_continue() {
-        check("continue", expect![[r#"
+        check(
+            "continue",
+            expect![[r#"
 Root@0..8
   ContinueStmt@0..8
-    ContinueKw@0..8 "continue""#]]);
+    ContinueKw@0..8 "continue""#]],
+        );
     }
 
     #[test]
     fn parse_simple_if() {
-        check("if x y endif", expect![[r#"
+        check(
+            "if x y endif",
+            expect![[r#"
             Root@0..12
               IfStmt@0..12
                 IfKw@0..2 "if"
@@ -453,12 +461,15 @@ Root@0..8
                 VariableRef@5..7
                   Identifier@5..6 "y"
                   Whitespace@6..7 " "
-                EndIfKw@7..12 "endif""#]]);
+                EndIfKw@7..12 "endif""#]],
+        );
     }
 
     #[test]
     fn parse_if_else() {
-        check("if x; else; y; endif", expect![[r#"
+        check(
+            "if x; else; y; endif",
+            expect![[r#"
             Root@0..20
               IfStmt@0..20
                 IfKw@0..2 "if"
@@ -474,12 +485,15 @@ Root@0..8
                   Identifier@12..13 "y"
                 Semicolon@13..14 ";"
                 Whitespace@14..15 " "
-                EndIfKw@15..20 "endif""#]]);
+                EndIfKw@15..20 "endif""#]],
+        );
     }
 
     #[test]
     fn parse_if_elseif_else() {
-        check("if x; elseif y; else; z; endif", expect![[r#"
+        check(
+            "if x; elseif y; else; z; endif",
+            expect![[r#"
 Root@0..30
   IfStmt@0..30
     IfKw@0..2 "if"
@@ -501,12 +515,15 @@ Root@0..30
       Identifier@22..23 "z"
     Semicolon@23..24 ";"
     Whitespace@24..25 " "
-    EndIfKw@25..30 "endif""#]]);
+    EndIfKw@25..30 "endif""#]],
+        );
     }
 
     #[test]
     fn parse_for_loop() {
-        check("for i = 1:10; x; endfor", expect![[r#"
+        check(
+            "for i = 1:10; x; endfor",
+            expect![[r#"
             Root@0..23
               ForLoop@0..23
                 ForKw@0..3 "for"
@@ -529,12 +546,15 @@ Root@0..30
                   Identifier@14..15 "x"
                 Semicolon@15..16 ";"
                 Whitespace@16..17 " "
-                EndForKw@17..23 "endfor""#]]);
+                EndForKw@17..23 "endfor""#]],
+        );
     }
 
     #[test]
     fn parse_while_loop() {
-        check("while x; y; endwhile", expect![[r#"
+        check(
+            "while x; y; endwhile",
+            expect![[r#"
             Root@0..20
               WhileLoop@0..20
                 WhileKw@0..5 "while"
@@ -547,12 +567,15 @@ Root@0..30
                   Identifier@9..10 "y"
                 Semicolon@10..11 ";"
                 Whitespace@11..12 " "
-                EndWhileKw@12..20 "endwhile""#]]);
+                EndWhileKw@12..20 "endwhile""#]],
+        );
     }
 
     #[test]
     fn parse_switch() {
-        check("switch x; case 1; y; otherwise; z; endswitch", expect![[r#"
+        check(
+            "switch x; case 1; y; otherwise; z; endswitch",
+            expect![[r#"
 Root@0..44
   SwitchStmt@0..44
     SwitchKw@0..6 "switch"
@@ -578,12 +601,15 @@ Root@0..44
       Identifier@32..33 "z"
     Semicolon@33..34 ";"
     Whitespace@34..35 " "
-    EndSwitchKw@35..44 "endswitch""#]]);
+    EndSwitchKw@35..44 "endswitch""#]],
+        );
     }
 
     #[test]
     fn parse_function_def() {
-        check("function y = f(x)\n  y = x * 2\nend", expect![[r#"
+        check(
+            "function y = f(x)\n  y = x * 2\nend",
+            expect![[r#"
             Root@0..33
               FnDef@0..33
                 FnKw@0..8 "function"
@@ -618,7 +644,8 @@ Root@0..44
                     Literal@28..30
                       Number@28..29 "2"
                       Newline@29..30 "\n"
-                EndKw@30..33 "end""#]]);
+                EndKw@30..33 "end""#]],
+        );
     }
 
     #[test]
