@@ -22,16 +22,26 @@
         "Octave Language"
     ],
     "engines": {
-        "vscode": "^1.66.0"
+        "vscode": "^1.85.0"
     },
-    "scripts": {},
+    "scripts": {
+        "build": "tsc -p .",
+        "watch": "tsc -watch -p .",
+        "typecheck": "tsc --noEmit",
+        "lint": "eslint src/",
+        "package": "vsce package",
+        "publish": "vsce publish"
+    },
     "dependencies": {
-        "vscode-languageclient": "^8.0.2"
+        "vscode-languageclient": "^9.0.1"
     },
     "devDependencies": {
-        "@types/node": "^7.10.14",
-        "@types/vscode": "^1.73.1",
-        "typescript": "^4.9.3"
+        "@types/node": "^20.0.0",
+        "@types/vscode": "^1.85.0",
+        "@vscode/vsce": "^3.0.0",
+        "eslint": "^9.0.0",
+        "typescript": "^5.5.0",
+        "typescript-eslint": "^8.0.0"
     },
     "activationEvents": [
         "onLanguage:octave"
@@ -40,5 +50,50 @@
         "workspace"
     ],
     "main": "./out/extension",
-    "contributes": {}
+    "contributes": {
+        "languages": [
+            {
+                "id": "octave",
+                "extensions": [
+                    ".m",
+                    ".octave-config"
+                ],
+                "aliases": [
+                    "Octave",
+                    "octave"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "configuration": {
+            "title": "Octave Language Server",
+            "properties": {
+                "octave-lsp.server.path": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "default": null,
+                    "scope": "machine-overridable",
+                    "markdownDescription": "Path to the octave-lsp server binary. If not set, the bundled binary will be used."
+                },
+                "octave-lsp.trace.server": {
+                    "type": "string",
+                    "scope": "window",
+                    "enum": [
+                        "off",
+                        "messages",
+                        "verbose"
+                    ],
+                    "enumDescriptions": [
+                        "No traces",
+                        "Messages sent between client and server",
+                        "Verbose output"
+                    ],
+                    "default": "off",
+                    "description": "Trace LSP messages (useful for debugging)."
+                }
+            }
+        }
+    }
 }

@@ -26,7 +26,7 @@ export default class Config implements vscode.WorkspaceConfiguration{
         return this._config.inspect<T>(section);
     }
 
-    public update(section: string, value: any, configurationTarget?: vscode.ConfigurationTarget): Thenable<void> {
+    public update(section: string, value: unknown, configurationTarget?: vscode.ConfigurationTarget): Thenable<void> {
         return this._config.update(section, value, configurationTarget);
     }
 }
